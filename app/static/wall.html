@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudyOS — Wall Display Kiosk</title>
+  <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body class="wall-body">
+
+  <!-- Offline Banner -->
+  <div id="offline-banner" class="offline-banner" style="display:none;">
+    ⚠️ DISCONNECTED — SHOWING CACHED STATE (LAST SYNCED: <span id="last-synced-time">--:--</span>)
+  </div>
+
+  <!-- Header -->
+  <header class="wall-header">
+    <div style="display:flex; align-items:center; gap:1.25rem;">
+      <div class="wall-brand-title">
+        <span style="width:30px; height:30px; background:linear-gradient(135deg,#6366f1,#8b5cf6); border-radius:8px; display:inline-flex; align-items:center; justify-content:center; color:#fff; font-size:0.9rem;">S</span>
+        STUDYOS
+      </div>
+      <span style="font-size:0.85rem; color:var(--text-muted);">Interview Preparation OS</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:1.5rem;">
+      <span id="wall-day-badge" class="badge badge-indigo" style="font-size:0.9rem; padding:0.35rem 0.85rem;">DAY 07 / 120 • Week 2 • Foundation Phase</span>
+      <span id="wall-env-badge" class="badge badge-green" style="font-size:0.85rem;">REAL MODE</span>
+      <div id="wall-clock" class="wall-clock">10:42 AM</div>
+      <div id="wall-date-str" class="wall-date">24 May 2025</div>
+    </div>
+  </header>
+
+  <!-- Main Screen Container (4 Slides) -->
+  <main class="wall-screen-container" id="screen-container">
+
+    <!-- SLIDE 1 — TODAY -->
+    <div id="screen-1" class="wall-screen" style="display:flex;">
+      <!-- Must Win Banner -->
+      <div id="wall-must-win-box" class="wall-must-win-hero">
+        <div style="font-size:0.85rem; font-weight:700; color:var(--accent-purple); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.25rem;">★ TODAY'S MUST WIN</div>
+        <div id="wall-must-win-text" style="font-family:var(--font-display); font-size:1.8rem; font-weight:800; color:var(--text-primary);">
+          Master Arrays & complete SentinelAI data ingestion (V0.1)
+        </div>
+        <div style="font-size:0.85rem; color:var(--accent-purple); font-style:italic; margin-top:0.35rem;">
+          ✧ "Discipline today, success tomorrow." ✧
+        </div>
+      </div>
+
+      <!-- Today's Plan Horizontal Cards -->
+      <div class="card" style="margin-bottom:1.25rem;">
+        <div class="card-header" style="margin-bottom:0.75rem;">
+          <div class="card-title">🎯 TODAY'S PLAN</div>
+          <span id="wall-plan-count-text" style="font-size:0.85rem; color:var(--text-secondary); font-family:var(--font-mono);">3 Tasks Scheduled • ~150 min</span>
+        </div>
+        <div id="wall-today-tasks" class="wall-plan-cards-3col">
+          <div class="wall-plan-card" style="border-bottom:3px solid var(--accent-blue);">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span class="badge badge-indigo">01 DSA Learn</span>
+              <span style="font-family:var(--font-mono); font-size:0.8rem; color:var(--text-muted);">60 min</span>
+            </div>
+            <div style="font-size:1.1rem; font-weight:700; color:var(--text-primary); margin:0.5rem 0 0.25rem 0;">Arrays Patterns</div>
+            <div style="font-size:0.8rem; color:var(--text-secondary);">Easy/Medium Problems</div>
+          </div>
+
+          <div class="wall-plan-card" style="border-bottom:3px solid var(--status-green);">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span class="badge badge-green">02 ML / DL Learn</span>
+              <span style="font-family:var(--font-mono); font-size:0.8rem; color:var(--text-muted);">45 min</span>
+            </div>
+            <div style="font-size:1.1rem; font-weight:700; color:var(--text-primary); margin:0.5rem 0 0.25rem 0;">NumPy Fundamentals</div>
+            <div style="font-size:0.8rem; color:var(--text-secondary);">- Exercises</div>
+          </div>
+
+          <div class="wall-plan-card" style="border-bottom:3px solid var(--status-orange);">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span class="badge badge-yellow">03 SENTINELAI Apply</span>
+              <span style="font-family:var(--font-mono); font-size:0.8rem; color:var(--text-muted);">45 min</span>
+            </div>
+            <div style="font-size:1.1rem; font-weight:700; color:var(--text-primary); margin:0.5rem 0 0.25rem 0;">V0.1 Data Ingestion</div>
+            <div style="font-size:0.8rem; color:var(--text-secondary);">Pipeline</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Stats Row -->
+      <div class="wall-stats-row-4col">
+        <div class="wall-stat-box">
+          <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Today's Progress</div>
+          <div id="wall-completion-pct" style="font-family:var(--font-display); font-size:1.6rem; font-weight:800; color:var(--accent-cyan); margin-top:0.25rem;">2 / 3</div>
+          <div style="font-size:0.75rem; color:var(--text-secondary);">Tasks Done</div>
+        </div>
+
+        <div class="wall-stat-box">
+          <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Focus Time</div>
+          <div style="font-family:var(--font-display); font-size:1.6rem; font-weight:800; color:var(--text-primary); margin-top:0.25rem;">4h 00m</div>
+          <div style="font-size:0.75rem; color:var(--text-secondary);">Available</div>
+        </div>
+
+        <div class="wall-stat-box">
+          <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Time Used</div>
+          <div style="font-family:var(--font-display); font-size:1.6rem; font-weight:800; color:var(--accent-indigo); margin-top:0.25rem;">1h 42m</div>
+          <div style="font-size:0.75rem; color:var(--text-secondary);">(70%)</div>
+        </div>
+
+        <div class="wall-stat-box">
+          <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Time Remaining</div>
+          <div style="font-family:var(--font-display); font-size:1.6rem; font-weight:800; color:var(--status-yellow); margin-top:0.25rem;">2h 18m</div>
+          <div style="font-size:0.75rem; color:var(--text-secondary);">(Incl. breaks)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 2 — 120-DAY JOURNEY -->
+    <div id="screen-2" class="wall-screen" style="display:none;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <div class="wall-title-huge" style="margin:0;">120-DAY JOURNEY</div>
+        <span class="badge badge-indigo">DAY 07 / 120</span>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1.5fr; gap:1.5rem; flex:1; margin-bottom:1rem;">
+        <!-- Left: 5 Phase Cards -->
+        <div>
+          <div class="journey-phase-item active">
+            <span style="font-size:1.4rem;">🚀</span>
+            <div>
+              <div style="font-weight:700; font-size:0.95rem; color:#A5B4FC;">01 FOUNDATION</div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">Days 01 - 30</div>
+            </div>
+          </div>
+
+          <div class="journey-phase-item">
+            <span style="font-size:1.4rem;">&lt;/&gt;</span>
+            <div>
+              <div style="font-weight:700; font-size:0.95rem; color:var(--text-primary);">BUILD & STRENGTHEN</div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">Days 31 - 60</div>
+            </div>
+          </div>
+
+          <div class="journey-phase-item">
+            <span style="font-size:1.4rem;">🧠</span>
+            <div>
+              <div style="font-weight:700; font-size:0.95rem; color:var(--text-primary);">BUILD ML/DL DEPTH</div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">Days 61 - 90</div>
+            </div>
+          </div>
+
+          <div class="journey-phase-item">
+            <span style="font-size:1.4rem;">🛡️</span>
+            <div>
+              <div style="font-weight:700; font-size:0.95rem; color:var(--text-primary);">SENTINELAI SYSTEM</div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">Days 91 - 110</div>
+            </div>
+          </div>
+
+          <div class="journey-phase-item">
+            <span style="font-size:1.4rem;">🏆</span>
+            <div>
+              <div style="font-weight:700; font-size:0.95rem; color:var(--text-primary);">INTERVIEW MODE</div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">Days 111 - 120</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Mountain Peak Graphic & Progress -->
+        <div class="mountain-graphic-container">
+          <div style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase; font-weight:600;">Overall Journey Progress</div>
+          <div id="wall-journey-pct" style="font-family:var(--font-display); font-size:4.5rem; font-weight:800; color:var(--accent-purple); line-height:1;">6%</div>
+          <div style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:1rem;">7 / 120 Days Completed</div>
+
+          <!-- SVG Mountain Illustration -->
+          <svg width="280" height="140" viewBox="0 0 280 140">
+            <path d="M20,130 L100,50 L140,80 L220,10 L270,130 Z" fill="rgba(30,41,59,0.5)" stroke="#2B3A55" stroke-width="2" />
+            <!-- Winding Trail -->
+            <path d="M20,130 Q60,110 90,95 T160,60 T220,10" fill="none" stroke="#8B5CF6" stroke-width="3" stroke-dasharray="4 4" />
+            <!-- Nodes -->
+            <circle cx="20" cy="130" r="5" fill="#8B5CF6" />
+            <circle cx="90" cy="95" r="5" fill="#8B5CF6" />
+            <circle cx="220" cy="10" r="7" fill="#10B981" />
+            <!-- Flag -->
+            <line x1="220" y1="10" x2="220" y2="-5" stroke="#10B981" stroke-width="2" />
+            <polygon points="220,-5 235,-10 220,-15" fill="#10B981" />
+          </svg>
+        </div>
+      </div>
+
+      <!-- Bottom Bar -->
+      <div class="wall-stats-row-4col">
+        <div class="wall-stat-box">
+          <div style="font-size:1.3rem; font-weight:800;">16</div>
+          <div style="font-size:0.75rem; color:var(--text-muted);">Weeks</div>
+        </div>
+        <div class="wall-stat-box">
+          <div style="font-size:1.3rem; font-weight:800;">120</div>
+          <div style="font-size:0.75rem; color:var(--text-muted);">Days</div>
+        </div>
+        <div class="wall-stat-box">
+          <div style="font-size:1.3rem; font-weight:800;">270</div>
+          <div style="font-size:0.75rem; color:var(--text-muted);">DSA Target</div>
+        </div>
+        <div class="wall-stat-box">
+          <div style="font-size:1.3rem; font-weight:800;">V0.1 - V1.4</div>
+          <div style="font-size:0.75rem; color:var(--text-muted);">SentinelAI</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 3 — REVISION & WEAKNESS RADAR -->
+    <div id="screen-3" class="wall-screen" style="display:none;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <div class="wall-title-huge" style="margin:0;">REVISION & WEAKNESS RADAR</div>
+        <span class="badge badge-indigo">DAY 07 / 120</span>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.25rem; flex:1; margin-bottom:1rem;">
+        <!-- Left: Revision Queue -->
+        <div class="card">
+          <div class="card-header" style="margin-bottom:0.75rem;">
+            <div class="card-title">📅 REVISION QUEUE</div>
+            <span class="badge badge-yellow">4 Due Today</span>
+          </div>
+
+          <div id="wall-revisions-list" style="display:flex; flex-direction:column; gap:0.6rem; font-size:0.85rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span><span style="display:inline-block; width:8px; height:8px; background:var(--status-green); border-radius:50%; margin-right:0.5rem;"></span> Hashing Basics</span>
+              <span style="color:var(--text-muted);">Today</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span><span style="display:inline-block; width:8px; height:8px; background:var(--status-green); border-radius:50%; margin-right:0.5rem;"></span> Big-O Notation</span>
+              <span style="color:var(--text-muted);">Today</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span><span style="display:inline-block; width:8px; height:8px; background:var(--status-yellow); border-radius:50%; margin-right:0.5rem;"></span> Python Lists</span>
+              <span style="color:var(--text-muted);">Tomorrow</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span><span style="display:inline-block; width:8px; height:8px; background:var(--status-orange); border-radius:50%; margin-right:0.5rem;"></span> Stacks & Queues</span>
+              <span style="color:var(--text-muted);">In 2 Days</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span><span style="display:inline-block; width:8px; height:8px; background:var(--accent-purple); border-radius:50%; margin-right:0.5rem;"></span> Recursion Basics</span>
+              <span style="color:var(--text-muted);">In 3 Days</span>
+            </div>
+          </div>
+          <button class="btn btn-secondary" style="width:100%; margin-top:1rem; font-size:0.75rem;">View All Revisions &gt;</button>
+        </div>
+
+        <!-- Right: Weakness Radar Chart & Bars -->
+        <div class="card">
+          <div class="card-header" style="margin-bottom:0.75rem;">
+            <div class="card-title">⭐ WEAKNESS RADAR</div>
+          </div>
+
+          <div style="display:flex; gap:1.25rem; align-items:center;">
+            <!-- Polygon Radar SVG -->
+            <svg width="110" height="110" viewBox="0 0 100 100" style="flex-shrink:0;">
+              <polygon points="50,10 90,38 75,85 25,85 10,38" fill="none" stroke="#1E293D" stroke-width="1" />
+              <polygon points="50,25 75,44 66,73 34,73 25,44" fill="none" stroke="#2B3A55" stroke-width="1" />
+              <polygon points="50,15 82,40 65,78 30,70 18,42" fill="rgba(139,92,246,0.25)" stroke="#8B5CF6" stroke-width="2" />
+            </svg>
+
+            <!-- Horizontal Severity Bars -->
+            <div id="wall-weakness-radar-container" style="flex:1; display:flex; flex-direction:column; gap:0.35rem; font-size:0.8rem;">
+              <div style="display:flex; justify-content:space-between;"><span>Arrays</span><span style="color:var(--status-red); font-weight:700;">75%</span></div>
+              <div style="display:flex; justify-content:space-between;"><span>Recursion</span><span style="color:var(--status-orange); font-weight:700;">60%</span></div>
+              <div style="display:flex; justify-content:space-between;"><span>Hashing</span><span style="color:var(--status-yellow); font-weight:700;">45%</span></div>
+              <div style="display:flex; justify-content:space-between;"><span>Trees</span><span style="color:var(--status-green); font-weight:700;">30%</span></div>
+              <div style="display:flex; justify-content:space-between;"><span>Dynamic Prog.</span><span style="color:var(--status-green); font-weight:700;">20%</span></div>
+            </div>
+          </div>
+
+          <div style="background:var(--bg-surface); border:1px solid var(--border-subtle); border-radius:var(--radius-sm); padding:0.6rem 0.85rem; margin-top:0.75rem; font-size:0.75rem; color:#A5B4FC; display:flex; align-items:center; gap:0.5rem;">
+            <span>🎯</span> Focus more on Arrays & Recursion. Solve, revise, and strengthen!
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Stats Row -->
+      <div class="wall-stats-row-4col">
+        <div class="wall-stat-box">
+          <div style="font-size:0.75rem; color:var(--text-muted);">Total Weak Topics</div>
+          <div style="font-family:var(--font-display); font-size:1.6rem; font-weight:800;">5</div>
+        </div>
+
+        <div class="wall-stat-box">
+          <div style="font-size:0.75rem; color:var(--text-muted);">Average Weakness</div>
+          <div style="font-family:var(--font-display); font-size:1.6rem; font-weight:800; color:var(--status-orange);">46%</div>
+        </div>
+
+        <div class="wall-stat-box" style="grid-column:span 2;">
+          <div style="font-size:0.75rem; color:var(--text-muted);">Resolved Weaknesses</div>
+          <div style="font-family:var(--font-display); font-size:1.6rem; font-weight:800; color:var(--status-green);">12 <span style="font-size:0.8rem; font-weight:400; color:var(--text-secondary);">(This Sprint)</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 4 — URGENT ALERTS -->
+    <div id="screen-4" class="wall-screen" style="display:none;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <div class="wall-title-huge" style="margin:0; color:var(--status-red);">URGENT ALERTS</div>
+        <span class="badge badge-red">DAY 07 / 120</span>
+      </div>
+
+      <div class="wall-urgent-screen-box">
+        <div class="urgent-warning-icon">⚠️</div>
+        <div id="wall-urgent-count-text" style="font-family:var(--font-display); font-size:1.8rem; font-weight:800; color:var(--status-red); margin-bottom:1.5rem;">
+          ACTIVE ASSIGNMENTS & URGENT ALERTS
+        </div>
+
+        <div id="wall-urgent-container" style="width:100%; display:flex; flex-direction:column; align-items:center; gap:1rem;">
+          <!-- Dynamically Populated by wall.js -->
+        </div>
+
+        <div style="margin-top:2rem; font-size:0.85rem; color:var(--text-secondary); display:flex; align-items:center; gap:0.5rem;">
+          <span>🛡️</span> "Don't delay. Small actions today prevent big pressure tomorrow."
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer Screen Navigation Pills -->
+  <footer class="wall-pills-bar">
+    <button id="nav-btn-prev" class="btn btn-secondary" onclick="prevScreen()">‹</button>
+    
+    <div id="pill-1" class="screen-pill active" onclick="setScreen(1)">1. TODAY</div>
+    <div id="pill-2" class="screen-pill" onclick="setScreen(2)">2. JOURNEY</div>
+    <div id="pill-3" class="screen-pill" onclick="setScreen(3)">3. REVISION</div>
+    <div id="pill-4" class="screen-pill" style="display:none;" onclick="setScreen(4)">4. URGENT</div>
+
+    <button id="nav-btn-next" class="btn btn-secondary" onclick="nextScreen()">›</button>
+
+    <span id="wall-auto-status" class="badge badge-green" style="margin-left:1rem;">AUTO ON</span>
+  </footer>
+
+  <!-- Screensaver Overlay -->
+  <div id="screensaver-overlay" class="screensaver-layer" style="display:none;">
+    <div style="text-align:center;">
+      <div id="ss-clock" class="screensaver-clock">10:42</div>
+      <div style="color:#475569; font-size:1.4rem; margin-top:1rem; font-family:var(--font-display);">StudyOS Ambient Night Mode</div>
+      <div style="color:#334155; font-size:1rem; margin-top:0.5rem;">Touch, click, or press any key to wake dashboard</div>
+    </div>
+  </div>
+
+  <script src="/static/js/wall.js"></script>
+</body>
+</html>

@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudyOS — Interview Preparation Command Center</title>
+  <link rel="stylesheet" href="/static/css/styles.css?v=3">
+</head>
+<body>
+  <!-- Mode Banners -->
+  <div id="test-mode-banner" style="display:none; background:#7c2d12; color:#ffedd5; padding:0.6rem 1.2rem; text-align:center; font-weight:600; font-size:0.9rem; border-bottom:2px solid #ea580c; display:flex; justify-content:space-between; align-items:center;">
+    <span>⚠️ TEST MODE — NO REAL DATA WILL BE MODIFIED</span>
+    <button class="btn btn-secondary" style="background:#c2410c; color:#fff; border:none; padding:0.25rem 0.75rem;" onclick="resetTestData()">RESET TEST DATA</button>
+  </div>
+
+  <div id="demo-mode-banner" style="display:none; background:#1e3a8a; color:#dbeafe; padding:0.6rem 1.2rem; text-align:center; font-weight:600; font-size:0.9rem; border-bottom:2px solid #2563eb; display:flex; justify-content:space-between; align-items:center;">
+    <span>ℹ️ DEMO MODE — PRE-POPULATED DEMONSTRATION DATA (ISOLATED)</span>
+    <button class="btn btn-secondary" style="background:#1d4ed8; color:#fff; border:none; padding:0.25rem 0.75rem;" onclick="resetDemoData()">RESET DEMO DATA</button>
+  </div>
+
+  <div class="app-container">
+    <!-- Left Navigation Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-icon">S</div>
+        <div>
+          <div class="brand-name">STUDYOS</div>
+          <div class="brand-sub">Interview Preparation OS</div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a class="nav-item active" onclick="setActiveNavItem(this); loadDashboardData();"><span class="nav-item-icon">🏠</span> Dashboard</a>
+        <a class="nav-item" onclick="setActiveNavItem(this); openModal('start-day-modal');"><span class="nav-item-icon">📅</span> Today's Plan</a>
+        <a class="nav-item" onclick="openRoadmapHub(this)"><span class="nav-item-icon">🗺️</span> Roadmap</a>
+        <a class="nav-item" onclick="openDsaTrackerHub(this)"><span class="nav-item-icon">&lt;/&gt;</span> DSA Tracker</a>
+        <a class="nav-item" onclick="openMlConceptsHub(this)"><span class="nav-item-icon">🧠</span> ML / DL / CV</a>
+        <a class="nav-item" onclick="openSentinelAiHub(this)"><span class="nav-item-icon">🛡️</span> SentinelAI</a>
+        <a class="nav-item" onclick="openRevisionsHub(this)"><span class="nav-item-icon">📋</span> Revisions</a>
+        <a class="nav-item" onclick="openWeaknessRadarHub(this)"><span class="nav-item-icon">🎯</span> Weakness Radar</a>
+        <a class="nav-item" onclick="openRecoveryHub(this)"><span class="nav-item-icon">🔄</span> Recovery Mode</a>
+        <a class="nav-item" onclick="openExamModeHub(this)"><span class="nav-item-icon">🎓</span> Exam Mode</a>
+        <a class="nav-item" onclick="setActiveNavItem(this); openModal('weekly-review-modal');"><span class="nav-item-icon">📊</span> Weekly Review</a>
+        <a class="nav-item" onclick="openReportsHub(this)"><span class="nav-item-icon">📈</span> Reports</a>
+        <a class="nav-item" onclick="setActiveNavItem(this); document.getElementById('jarvis-input').focus();"><span class="nav-item-icon">🟣</span> JARVIS <span style="display:inline-block; width:8px; height:8px; background:#8b5cf6; border-radius:50%; margin-left:auto;"></span></a>
+        <a class="nav-item" onclick="openSettingsHub(this)"><span class="nav-item-icon">⚙️</span> Settings</a>
+      </nav>
+
+      <!-- Sidebar Sprint Widget -->
+      <div class="sidebar-sprint-widget">
+        <div class="widget-title">Sprint Progress</div>
+        <div id="sidebar-sprint-pct" class="widget-val">6%</div>
+        <div id="sidebar-sprint-sub" class="widget-sub">7 / 120 Days Completed</div>
+        <div class="progress-bar-bg" style="margin-top:0.5rem; height:6px;">
+          <div id="sidebar-sprint-bar" class="progress-bar-fill" style="width:6%;"></div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Controller Section -->
+    <main class="controller-main">
+      <!-- Top Header Navbar -->
+      <header class="top-header" style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 1.25rem; background:var(--bg-surface); border-bottom:1px solid var(--border-subtle); gap:0.75rem; width:100%; box-sizing:border-box;">
+        <div class="header-day-info" style="display:flex; align-items:baseline; gap:0.5rem; flex-shrink:0;">
+          <div>
+            <div id="sprint-day-badge" class="header-day-title" style="font-family:var(--font-display); font-size:1.35rem; font-weight:800; white-space:nowrap;">DAY 07 / 120</div>
+            <div id="sprint-month-text" class="header-week-sub" style="font-size:0.78rem; color:var(--text-secondary); white-space:nowrap;">Week 2 • Foundation Phase</div>
+          </div>
+        </div>
+
+        <div class="header-quote-box" style="background:rgba(15,23,42,0.6); border:1px solid var(--border-subtle); border-radius:var(--radius-sm); padding:0.35rem 0.85rem; text-align:center; font-size:0.78rem; color:#94A3B8; font-style:italic; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:260px;">
+          "Discipline today, success tomorrow." — StudyOS
+        </div>
+
+        <div class="header-actions" style="display:flex; align-items:center; gap:0.4rem; flex-shrink:0; flex-wrap:nowrap;">
+          <span id="health-badge" class="badge badge-green" style="white-space:nowrap; flex-shrink:0; font-size:0.7rem; padding:0.25rem 0.55rem;">ON TRACK</span>
+          <span id="sprint-mode-badge" class="badge badge-indigo" style="white-space:nowrap; flex-shrink:0; font-size:0.7rem; padding:0.25rem 0.55rem;">NORMAL MODE</span>
+          
+          <button id="start-sprint-btn" class="btn btn-accent" style="display:none; white-space:nowrap; flex-shrink:0; background:linear-gradient(135deg, #6366F1, #8B5CF6); color:#fff; font-weight:700; border:none; padding:0.35rem 0.65rem; height:34px; font-size:0.78rem;" onclick="openModal('start-sprint-modal')">🚀 Start Sprint</button>
+
+          <button class="btn btn-accent" style="white-space:nowrap; flex-shrink:0; background:linear-gradient(135deg, #10B981, #059669); color:#fff; font-weight:700; border:none; padding:0.35rem 0.75rem; height:34px; font-size:0.78rem; box-shadow:0 4px 10px rgba(16,185,129,0.25);" onclick="openModal('add-task-modal')">➕ Add Task</button>
+          <button class="btn btn-primary" style="white-space:nowrap; flex-shrink:0; padding:0.35rem 0.65rem; height:34px; font-size:0.78rem;" onclick="openModal('start-day-modal')">📅 Start Day</button>
+          <button class="btn btn-secondary" style="white-space:nowrap; flex-shrink:0; padding:0.35rem 0.65rem; height:34px; font-size:0.78rem;" onclick="openModal('end-day-modal')">🏁 End Day</button>
+          <div class="avatar-circle" style="flex-shrink:0; width:30px; height:30px; font-size:0.82rem;" title="User Profile">S</div>
+        </div>
+      </header>
+
+      <!-- Main Dashboard Content Grid -->
+      <div class="dashboard-grid">
+
+        <!-- Row 1: Today's Must Win Banner Card -->
+        <div class="card col-12 must-win-card">
+          <div style="flex:1;">
+            <div class="must-win-title">
+              ★ TODAY'S MUST WIN
+            </div>
+            <div id="ctrl-must-win-text" class="must-win-text">
+              Master Arrays & complete SentinelAI data ingestion (V0.1)
+            </div>
+            <div style="display:flex; gap:1.5rem; align-items:center; margin-top:0.75rem; font-size:0.85rem; color:var(--text-secondary);">
+              <span>⏱️ Focus Time: 4h 00m</span>
+              <span id="ctrl-must-win-badge" class="badge badge-indigo">PENDING</span>
+              <button class="btn btn-secondary" style="padding:0.15rem 0.5rem; font-size:0.75rem;" onclick="promptUpdateMustWin()">Edit</button>
+            </div>
+          </div>
+
+          <!-- Circular Ring Gauge Chart -->
+          <div class="must-win-ring-container">
+            <div class="ring-gauge-box">
+              <svg width="90" height="90" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="40" stroke="#1E293D" stroke-width="10" fill="none" />
+                <circle id="must-win-ring-circle" cx="50" cy="50" r="40" stroke="url(#gradient-ring)" stroke-width="10" fill="none" stroke-dasharray="251.2" stroke-dashoffset="70" stroke-linecap="round" transform="rotate(-90 50 50)" />
+                <defs>
+                  <linearGradient id="gradient-ring" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#8B5CF6" />
+                    <stop offset="100%" stop-color="#06B6D4" />
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div class="ring-gauge-val">
+                <span id="must-win-ring-pct">72%</span>
+                <span class="ring-gauge-label">Day Progress</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 2 Left Column: Today's Plan (Span 8) -->
+        <div class="card col-8">
+          <div class="card-header" style="align-items:center; margin-bottom:0.75rem;">
+            <div style="display:flex; align-items:center; gap:0.75rem;">
+              <div class="card-title">📅 TODAY'S PLAN & ASSIGNMENTS</div>
+              <button class="btn btn-accent" style="background:#10B981; color:#fff; font-size:0.75rem; padding:0.2rem 0.6rem; border:none;" onclick="openModal('add-task-modal')">➕ Add Detailed Task</button>
+            </div>
+            <span id="task-progress-text" style="font-size:0.85rem; color:var(--text-secondary); font-family:var(--font-mono);">0 Tasks Scheduled • 0m Planned</span>
+          </div>
+          
+          <!-- Inline Quick Task & Assignment Adder -->
+          <form onsubmit="handleQuickTaskAdd(event)" style="display:flex; gap:0.5rem; margin-bottom:0.75rem;">
+            <input type="text" id="quick-task-title" placeholder="+ Type task or assignment name (e.g., ML Assignment #2, 3 Sum LeetCode)..." style="flex:1; background:var(--bg-surface); border:1px solid var(--border-bright); color:var(--text-primary); padding:0.45rem 0.75rem; border-radius:var(--radius-sm); font-size:0.85rem;" required>
+            <select id="quick-task-cat" style="background:var(--bg-surface); border:1px solid var(--border-bright); color:var(--text-primary); padding:0.45rem 0.5rem; border-radius:var(--radius-sm); font-size:0.82rem;">
+              <option value="Assignment">📝 Assignment</option>
+              <option value="College">🎓 College</option>
+              <option value="DSA" selected>&lt;/&gt; DSA</option>
+              <option value="ML">🧠 ML</option>
+              <option value="DL">⚡ DL</option>
+              <option value="SentinelAI">🛡️ SentinelAI</option>
+              <option value="General">📌 General</option>
+            </select>
+            <select id="quick-task-mins" style="background:var(--bg-surface); border:1px solid var(--border-bright); color:var(--text-primary); padding:0.45rem 0.5rem; border-radius:var(--radius-sm); font-size:0.82rem;">
+              <option value="30">⏱️ 30m</option>
+              <option value="45" selected>⏱️ 45m</option>
+              <option value="60">⏱️ 60m</option>
+              <option value="90">⏱️ 90m</option>
+              <option value="120">⏱️ 2h</option>
+            </select>
+            <button type="submit" class="btn btn-primary" style="padding:0.45rem 0.85rem; font-size:0.82rem; flex-shrink:0;">Add Task</button>
+          </form>
+
+          <!-- Category Filter Chips -->
+          <div style="display:flex; gap:0.4rem; margin-bottom:0.85rem; flex-wrap:wrap;">
+            <button class="btn btn-secondary task-filter-btn active" style="padding:0.15rem 0.6rem; font-size:0.75rem;" onclick="filterTasks('ALL', this)">All Tasks</button>
+            <button class="btn btn-secondary task-filter-btn" style="padding:0.15rem 0.6rem; font-size:0.75rem;" onclick="filterTasks('Assignment', this)">📝 Assignments</button>
+            <button class="btn btn-secondary task-filter-btn" style="padding:0.15rem 0.6rem; font-size:0.75rem;" onclick="filterTasks('College', this)">🎓 College</button>
+            <button class="btn btn-secondary task-filter-btn" style="padding:0.15rem 0.6rem; font-size:0.75rem;" onclick="filterTasks('DSA', this)">&lt;/&gt; DSA</button>
+            <button class="btn btn-secondary task-filter-btn" style="padding:0.15rem 0.6rem; font-size:0.75rem;" onclick="filterTasks('ML', this)">🧠 ML / DL</button>
+            <button class="btn btn-secondary task-filter-btn" style="padding:0.15rem 0.6rem; font-size:0.75rem;" onclick="filterTasks('SentinelAI', this)">🛡️ SentinelAI</button>
+          </div>
+
+          <div class="progress-bar-bg" style="margin-bottom:1rem;"><div id="task-progress-fill" class="progress-bar-fill" style="width:0%;"></div></div>
+          
+          <div id="today-tasks-list">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <!-- Row 2 Right Column: Telemetry & Widgets Stack (Span 4) -->
+        <div class="col-4" style="display:flex; flex-direction:column; gap:1.25rem;">
+          <!-- Streak Card -->
+          <div class="card">
+            <div class="card-header" style="margin-bottom:0.5rem;">
+              <div class="card-title">🔥 STREAK</div>
+              <span style="font-size:0.75rem; color:var(--text-muted);">Longest: 6 days</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <span id="streak-days-val" style="font-family:var(--font-display); font-size:2rem; font-weight:800; color:var(--text-primary);">6</span>
+                <span style="font-size:0.9rem; color:var(--text-secondary);"> Days Current Streak</span>
+              </div>
+              <div style="display:flex; gap:0.35rem;">
+                <span style="width:10px; height:10px; border-radius:50%; background:var(--status-green);" title="Mon"></span>
+                <span style="width:10px; height:10px; border-radius:50%; background:var(--status-green);" title="Tue"></span>
+                <span style="width:10px; height:10px; border-radius:50%; background:var(--status-green);" title="Wed"></span>
+                <span style="width:10px; height:10px; border-radius:50%; background:var(--status-green);" title="Thu"></span>
+                <span style="width:10px; height:10px; border-radius:50%; background:var(--status-green);" title="Fri"></span>
+                <span style="width:10px; height:10px; border-radius:50%; background:var(--status-green);" title="Sat"></span>
+                <span style="width:10px; height:10px; border-radius:50%; background:var(--border-subtle);" title="Sun"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Roadmap Progress Card -->
+          <div class="card" onclick="openRoadmapHub()" style="cursor:pointer;">
+            <div class="card-header" style="margin-bottom:0.5rem;">
+              <div class="card-title">🗺️ ROADMAP PROGRESS</div>
+              <span style="font-size:0.8rem; font-family:var(--font-mono); color:var(--accent-indigo);">Overall: 6%</span>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:0.5rem; font-size:0.8rem;">
+              <div>
+                <div style="display:flex; justify-content:space-between; color:var(--text-secondary);">
+                  <span>♦ Foundation (DSA + Core CS)</span>
+                  <span id="dsa-solved-val">18%</span>
+                </div>
+                <div class="progress-bar-bg" style="height:4px;"><div class="progress-bar-fill" style="width:18%; background:var(--status-green);"></div></div>
+              </div>
+              <div>
+                <div style="display:flex; justify-content:space-between; color:var(--text-secondary);">
+                  <span>♦ ML / DL / CV</span>
+                  <span id="concepts-mastered-val">8%</span>
+                </div>
+                <div class="progress-bar-bg" style="height:4px;"><div class="progress-bar-fill" style="width:8%; background:var(--accent-blue);"></div></div>
+              </div>
+              <div>
+                <div style="display:flex; justify-content:space-between; color:var(--text-secondary);">
+                  <span>♦ SentinelAI Project</span>
+                  <span id="sentinel-ver-val">5%</span>
+                </div>
+                <div class="progress-bar-bg" style="height:4px;"><div class="progress-bar-fill" style="width:5%; background:var(--accent-purple);"></div></div>
+              </div>
+              <div>
+                <div style="display:flex; justify-content:space-between; color:var(--text-secondary);">
+                  <span>♦ Interview Prep</span>
+                  <span>0%</span>
+                </div>
+                <div class="progress-bar-bg" style="height:4px;"><div class="progress-bar-fill" style="width:0%;"></div></div>
+              </div>
+            </div>
+            <div id="dsa-target-text" style="font-size:0.75rem; color:var(--text-muted); margin-top:0.5rem; text-align:right;">Week 2 / 16 • Day 7 / 120</div>
+          </div>
+
+          <!-- Weakness Radar Card -->
+          <div class="card" onclick="openWeaknessRadarHub()" style="cursor:pointer;">
+            <div class="card-header" style="margin-bottom:0.5rem;">
+              <div class="card-title">🛡️ WEAKNESS RADAR</div>
+              <button class="btn btn-secondary" style="padding:0.15rem 0.5rem; font-size:0.7rem;">View All</button>
+            </div>
+            
+            <div style="display:flex; align-items:center; gap:1rem;">
+              <svg width="90" height="90" viewBox="0 0 100 100" style="flex-shrink:0;">
+                <polygon points="50,10 90,38 75,85 25,85 10,38" fill="none" stroke="#1E293D" stroke-width="1" />
+                <polygon points="50,25 75,44 66,73 34,73 25,44" fill="none" stroke="#2B3A55" stroke-width="1" />
+                <polygon points="50,15 82,40 65,78 30,70 18,42" fill="rgba(139,92,246,0.2)" stroke="#8B5CF6" stroke-width="2" />
+              </svg>
+
+              <div id="ctrl-weakness-list" style="flex:1; display:flex; flex-direction:column; gap:0.35rem; font-size:0.75rem;">
+                <div style="display:flex; justify-content:space-between;"><span>Arrays</span><span style="color:var(--status-red);">75%</span></div>
+                <div style="display:flex; justify-content:space-between;"><span>Recursion</span><span style="color:var(--status-orange);">60%</span></div>
+                <div style="display:flex; justify-content:space-between;"><span>Hashing</span><span style="color:var(--status-yellow);">45%</span></div>
+                <div style="display:flex; justify-content:space-between;"><span>Trees</span><span style="color:var(--status-green);">30%</span></div>
+              </div>
+            </div>
+            <div style="font-size:0.75rem; color:#A5B4FC; margin-top:0.5rem;">🎯 Focus more on Weak Topics</div>
+          </div>
+
+          <!-- Recovery Status Card -->
+          <div class="card" onclick="openRecoveryHub()" style="border-left:4px solid var(--status-green); cursor:pointer;">
+            <div class="card-header" style="margin-bottom:0.25rem;">
+              <div class="card-title">🔄 RECOVERY STATUS</div>
+              <span id="ctrl-recovery-badge" class="badge badge-green">ON TRACK</span>
+            </div>
+            <div id="ctrl-recovery-box" style="font-size:0.85rem; color:var(--text-secondary);">
+              <strong style="color:var(--status-green);">You are on track!</strong><br>
+              No pending backlog. Great consistency!
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 3 Bottom Left: Revision Queue & SentinelAI Progress (Span 8) -->
+        <div class="card col-4" onclick="openRevisionsHub()" style="cursor:pointer;">
+          <div class="card-header">
+            <div class="card-title">📋 REVISION QUEUE</div>
+            <span id="revisions-count-text" class="badge badge-yellow">4 Due Today</span>
+          </div>
+          <div id="ctrl-revisions-list" style="display:flex; flex-direction:column; gap:0.4rem; font-size:0.85rem;">
+            <div style="display:flex; justify-content:space-between; color:var(--text-primary);">
+              <span>Hashing Basics</span> <span style="color:var(--status-green);">Today</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; color:var(--text-primary);">
+              <span>Big-O Notation</span> <span style="color:var(--status-green);">Today</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; color:var(--text-muted);">
+              <span>Python Lists</span> <span>Tomorrow</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; color:var(--text-muted);">
+              <span>Stacks & Queues</span> <span>In 2 Days</span>
+            </div>
+          </div>
+          <a style="font-size:0.75rem; color:var(--accent-indigo); text-decoration:none; display:inline-block; margin-top:0.75rem;">View All Revisions &gt;</a>
+        </div>
+
+        <div class="card col-8" onclick="openSentinelAiHub()" style="cursor:pointer;">
+          <div class="card-header">
+            <div class="card-title">⚙️ SENTINELAI PROGRESS</div>
+            <span id="sentinel-pct-text" style="font-size:0.8rem; font-family:var(--font-mono); color:var(--accent-indigo);">V0.1 In Progress</span>
+          </div>
+
+          <!-- Pipeline Nodes Graphic -->
+          <div class="pipeline-nodes">
+            <div style="position:absolute; top:25px; left:10%; right:10%; height:2px; background:var(--border-subtle); z-index:1;"></div>
+            <div class="pipeline-node">
+              <div class="node-circle active">✓</div>
+              <div class="node-label active">V0.1 Ingestion</div>
+            </div>
+            <div class="pipeline-node">
+              <div class="node-circle">02</div>
+              <div class="node-label">V0.2 Classifier</div>
+            </div>
+            <div class="pipeline-node">
+              <div class="node-circle">03</div>
+              <div class="node-label">V0.3 Anomaly</div>
+            </div>
+            <div class="pipeline-node">
+              <div class="node-circle">04</div>
+              <div class="node-label">V0.4 Deep Models</div>
+            </div>
+            <div class="pipeline-node">
+              <div class="node-circle">1.x</div>
+              <div class="node-label">V1.x Deploy</div>
+            </div>
+          </div>
+          <div style="font-size:0.8rem; color:var(--text-secondary); margin-top:0.5rem;">Overall Project Progress: <strong style="color:var(--text-primary);">8%</strong></div>
+        </div>
+
+        <!-- Row 4 Bottom Full Width: JARVIS Dock Console -->
+        <div class="col-12">
+          <form id="jarvis-form" onsubmit="handleJarvisSubmit(event)" class="jarvis-dock-bar">
+            <div class="jarvis-badge-tag">
+              <span>🟣</span> JARVIS
+            </div>
+            <input type="text" id="jarvis-input" class="jarvis-input-field" placeholder="Ask JARVIS anything... (e.g., add task, explain concept, show progress)" required>
+            <button type="submit" class="btn btn-accent" style="padding:0.6rem 1.25rem;">Send ➤</button>
+          </form>
+          <div id="jarvis-chat-log" style="display:none; background:var(--bg-surface); border:1px solid var(--border-subtle); border-radius:var(--radius-sm); padding:0.75rem; margin-top:0.5rem; font-family:var(--font-mono); font-size:0.85rem; max-height:120px; overflow-y:auto;"></div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- ==========================================
+       1. ADD TASK & ASSIGNMENT MODAL
+       ========================================== -->
+  <div id="add-task-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-content" style="max-width:550px;">
+      <div class="card-header">
+        <div class="card-title">➕ ADD NEW TASK OR ASSIGNMENT</div>
+        <button class="btn btn-secondary" onclick="closeModal('add-task-modal')">X</button>
+      </div>
+      <form onsubmit="handleAddTaskModalSubmit(event)">
+        <div class="form-group">
+          <label>Title / Assignment Name *</label>
+          <input type="text" id="atm-title" placeholder="e.g. ML Assignment #2, 3Sum LeetCode, Review ResNet" required>
+        </div>
+        <div style="display:flex; gap:1rem;">
+          <div class="form-group" style="flex:1;">
+            <label>Category / Type *</label>
+            <select id="atm-category">
+              <option value="Assignment" selected>📝 Assignment</option>
+              <option value="College">🎓 College</option>
+              <option value="DSA">&lt;/&gt; DSA</option>
+              <option value="ML">🧠 ML</option>
+              <option value="DL">⚡ DL</option>
+              <option value="SentinelAI">🛡️ SentinelAI</option>
+              <option value="General">📌 General</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label>Priority</label>
+            <select id="atm-priority">
+              <option value="high">🔥 High Priority</option>
+              <option value="medium" selected>⚡ Medium</option>
+              <option value="low">🌱 Low</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex; gap:1rem;">
+          <div class="form-group" style="flex:1;">
+            <label>Estimated Time (mins)</label>
+            <input type="number" id="atm-mins" value="45" min="5" step="5" required>
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label>Scheduled / Due Date</label>
+            <input type="date" id="atm-due-date" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Notes / Details (Optional)</label>
+          <textarea id="atm-notes" rows="3" placeholder="Add submission deadlines, key steps, or instructions..."></textarea>
+        </div>
+        <div style="display:flex; gap:0.75rem; margin-top:1.25rem;">
+          <button type="submit" class="btn btn-accent" style="flex:1; background:linear-gradient(135deg, #10B981, #059669); color:#fff; font-weight:700; border:none; padding:0.6rem;">Create Task / Assignment</button>
+          <button type="button" class="btn btn-secondary" onclick="closeModal('add-task-modal')">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       REAL ROADMAP MODAL HUB (ALL 16 WEEKS)
+       ========================================== -->
+  <div id="roadmap-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-content" style="max-width:850px; max-height:85vh; display:flex; flex-direction:column;">
+      <div class="card-header">
+        <div class="card-title">🗺️ REAL 120-DAY INTERVIEW PREPARATION ROADMAP</div>
+        <button class="btn btn-secondary" onclick="closeModal('roadmap-modal')">X</button>
+      </div>
+      
+      <!-- Month Filter Pills -->
+      <div style="display:flex; gap:0.5rem; margin-bottom:1rem; flex-wrap:wrap;">
+        <button id="rm-filter-btn-0" class="btn btn-primary" style="font-size:0.8rem;" onclick="filterRoadmapMonth(0)">ALL 16 WEEKS</button>
+        <button id="rm-filter-btn-1" class="btn btn-secondary" style="font-size:0.8rem;" onclick="filterRoadmapMonth(1)">MONTH 1: FOUNDATION</button>
+        <button id="rm-filter-btn-2" class="btn btn-secondary" style="font-size:0.8rem;" onclick="filterRoadmapMonth(2)">MONTH 2: DL + CV</button>
+        <button id="rm-filter-btn-3" class="btn btn-secondary" style="font-size:0.8rem;" onclick="filterRoadmapMonth(3)">MONTH 3: ADVANCED INTELLIGENCE</button>
+        <button id="rm-filter-btn-4" class="btn btn-secondary" style="font-size:0.8rem;" onclick="filterRoadmapMonth(4)">MONTH 4: INTERVIEW MODE</button>
+      </div>
+
+      <!-- Real Roadmap Weeks List -->
+      <div id="roadmap-weeks-list" style="flex:1; overflow-y:auto; padding-right:0.5rem;">
+        <div style="color:var(--text-muted); font-size:0.9rem;">Loading full 16-week database roadmap...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. DSA Tracker Modal -->
+  <div id="dsa-tracker-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-content">
+      <div class="card-header">
+        <div class="card-title">&lt;/&gt; DSA PROBLEMS TRACKER</div>
+        <button class="btn btn-secondary" onclick="closeModal('dsa-tracker-modal')">X</button>
+      </div>
+      <form onsubmit="handleLogDsaSubmit(event)">
+        <div class="form-group">
+          <label>Problem Name</label>
+          <input type="text" id="dsa-prob-name" placeholder="e.g. 3Sum / Two Sum" required>
+        </div>
+        <div class="form-group">
+          <label>Topic Category</label>
+          <select id="dsa-prob-topic">
+            <option value="Arrays" selected>Arrays & Hashing</option>
+            <option value="Two Pointers">Two Pointers</option>
+            <option value="Sliding Window">Sliding Window</option>
+            <option value="Trees">Binary Trees</option>
+            <option value="DP">Dynamic Programming</option>
+            <option value="Graphs">Graphs</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:1rem;">
+          <div class="form-group" style="flex:1;">
+            <label>Difficulty</label>
+            <select id="dsa-prob-diff">
+              <option value="Easy">Easy</option>
+              <option value="Medium" selected>Medium</option>
+              <option value="Hard">Hard</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label>Time Taken (mins)</label>
+            <input type="number" id="dsa-prob-time" value="30" required>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%; margin-top:0.5rem;">Log Solved Problem</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. ML / DL / CV Concepts Modal -->
+  <div id="ml-concepts-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-content">
+      <div class="card-header">
+        <div class="card-title">🧠 ML / DL / CV CONCEPTS LOG</div>
+        <button class="btn btn-secondary" onclick="closeModal('ml-concepts-modal')">X</button>
+      </div>
+      <form onsubmit="handleLogConceptSubmit(event)">
+        <div class="form-group">
+          <label>Concept Mastered Name</label>
+          <input type="text" id="concept-name-input" placeholder="e.g. Backpropagation Math / ResNet Residual Connections" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;">Record Concept Mastery</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 4. SentinelAI Modal -->
+  <div id="sentinelai-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-content">
+      <div class="card-header">
+        <div class="card-title">🛡️ SENTINELAI ARCHITECTURE HUB</div>
+        <button class="btn btn-secondary" onclick="closeModal('sentinelai-modal')">X</button>
+      </div>
+      <div style="background:var(--bg-surface); padding:1rem; border-radius:var(--radius-sm); font-size:0.9rem; line-height:1.6; color:var(--text-secondary); margin-bottom:1.5rem;">
+        <strong style="color:var(--text-primary);">SentinelAI Pipeline Status:</strong><br>
+        • V0.1: Baseline Data Ingestion & Pandas Preprocessing (ACTIVE)<br>
+        • V0.2: Feature Extractor & Baseline Classifier<br>
+        • V0.3: Anomaly Detection Engine<br>
+        • V0.4: Deep Learning Vision Models<br>
+        • V1.0: Full Production API Deployment
+      </div>
+      <button class="btn btn-primary" style="width:100%;" onclick="closeModal('sentinelai-modal')">Close Hub</button>
+    </div>
+  </div>
+
+  <!-- 5. Revisions Modal -->
+  <div id="revisions-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-content">
+      <div class="card-header">
+        <div class="card-title">📋 SPACED REVISION MANAGER</div>
+        <button class="btn btn-secondary" onclick="closeModal('revisions-modal')">X</button>
+      </div>
+      <div id="revisions-modal-list" style="font-size:0.9rem; color:var(--text-secondary); margin-bottom:1.5rem;">
+        Spaced Revisions keep your retention at 100% using Fibonacci interval scaling. Mark items done directly from the main dashboard!
+      </div>
+      <button class="btn btn-primary" style="width:100%;" onclick="closeModal('revisions-modal')">Close Manager</button>
+    </div>
+  </div>
+
+  <!-- 6. Weakness Radar Modal -->
+  <div id="weakness-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-content">
+      <div class="card-header">
+        <div class="card-title">🎯 WEAKNESS RADAR & MISTAKES LOG</div>
+        <button class="btn btn-secondary" onclick="closeModal('weakness-modal')">X</button>
+      </div>
+      <form onsubmit="handleAddMistakeSubmit(event)">
+        <div class="form-group">
+          <label>Mistake Category / Type</label>
+          <input type="text" id="mistake-type-input" placeholder="e.g. Array Off-by-one / Matrix Bounds" required>
+        </div>
+        <div class="form-group">
+          <label>Mistake Description & Correction Note</label>
+          <textarea id="mistake-desc-input" rows="3" placeholder="Explain what went wrong and how to solve it cleanly next time..." required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;">Log Mistake to Radar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 7. Recovery Mode Modal -->
+  <div id="recovery-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-content">
+      <div class="card-header">
+        <div class="card-title">🔄 RECOVERY MODE SCHEDULER</div>
+        <button class="btn btn-secondary" onclick="closeModal('recovery-modal')">X</button>
+      </div>
+      <div style="background:var(--bg-surface); padding:1rem; border-radius:var(--radius-sm); font-size:0.9rem; line-height:1.6; color:var(--text-secondary); margin-bottom:1.5rem;">
+        <strong style="color:var(--status-green);">Recovery Engine Logic:</strong><br>
+        When missed hours occur, StudyOS caps daily recovery at +1.5h (normal) or +0.5h (Exam Mode) to prevent overwhelming workload. It automatically redistributes missed hours cleanly across future days.
+      </div>
+      <button class="btn btn-primary" style="width:100%;" onclick="closeModal('recovery-modal')">Close Recovery View</button>
+    </div>
+  </div>
+
+  <!-- 8. Exam Mode Modal -->
+  <div id="exam-mode-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-content">
+      <div class="card-header">
+        <div class="card-title">🎓 SEMESTER EXAM MODE</div>
+        <button class="btn btn-secondary" onclick="closeModal('exam-mode-modal')">X</button>
+      </div>
+      <div style="background:var(--bg-surface); padding:1.25rem; border-radius:var(--radius-sm); font-size:0.9rem; line-height:1.6; color:var(--text-secondary); margin-bottom:1.5rem; border-left:4px solid var(--status-yellow);">
+        <strong style="color:var(--status-yellow);">EXAM MODE PHILOSOPHY & LOGIC:</strong><br><br>
+        1. <strong>Protect Academic Grades:</strong> Automatically allocates 120 mins daily specifically to <em>College Exam Prep & Review</em>.<br>
+        2. <strong>Maintain Momentum:</strong> Reduces normal DSA/ML workload to lightweight 15–30 min retention slots so your 120-day streak is never broken.<br>
+        3. <strong>Cap Backlog Accumulation:</strong> Reduces daily recovery backlog caps to 0.5 hrs, ensuring missed hours don't build overwhelming pressure.<br>
+        4. <strong>Wall Alert Integration:</strong> Highlights upcoming college exams on Wall Display Screen 4.
+      </div>
+      <button class="btn btn-accent" style="width:100%;" onclick="toggleExamMode(); closeModal('exam-mode-modal');">Toggle Exam Mode ON / OFF</button>
+    </div>
+  </div>
+
+  <!-- 9. Reports & Backup Modal -->
+  <div id="reports-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-content">
+      <div class="card-header">
+        <div class="card-title">📈 REPORTS & BACKUP HUB</div>
+        <button class="btn btn-secondary" onclick="closeModal('reports-modal')">X</button>
+      </div>
+      <div style="margin-bottom:1.5rem; font-size:0.9rem; color:var(--text-secondary);">
+        Daily and Weekly Markdown reports are generated in the <code>reports/</code> folder upon completing Day End reviews.
+      </div>
+      <button class="btn btn-primary" style="width:100%;" onclick="triggerManualBackup(); closeModal('reports-modal');">Trigger Manual Backup & Data Export</button>
+    </div>
+  </div>
+
+  <!-- 10. Settings & Environment Modal -->
+  <div id="settings-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-content">
+      <div class="card-header">
+        <div class="card-title">⚙️ SYSTEM SETTINGS & ENVIRONMENT</div>
+        <button class="btn btn-secondary" onclick="closeModal('settings-modal')">X</button>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:1rem; margin-bottom:1.5rem;">
+        <button class="btn btn-primary" onclick="requestEnvSwitch('REAL'); closeModal('settings-modal');">Switch to REAL MODE</button>
+        <button class="btn btn-secondary" onclick="requestEnvSwitch('TEST'); closeModal('settings-modal');">Switch to TEST MODE</button>
+        <button class="btn btn-secondary" onclick="requestEnvSwitch('DEMO'); closeModal('settings-modal');">Switch to DEMO MODE</button>
+        <button class="btn btn-secondary" onclick="toggleWallSleep(); closeModal('settings-modal');">Activate Wall Sleep Mode</button>
+      </div>
+      <button class="btn btn-secondary" style="width:100%;" onclick="closeModal('settings-modal')">Close Settings</button>
+    </div>
+  </div>
+
+  <!-- Start Day, End Day, Sprint Modals -->
+  <div id="start-day-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-content">
+      <div class="card-header">
+        <div class="card-title">START DAY — Initialize Daily Schedule</div>
+        <button class="btn btn-secondary" onclick="closeModal('start-day-modal')">X</button>
+      </div>
+      <form onsubmit="handleStartDaySubmit(event)">
+        <div class="form-group">
+          <label>Today's Must Win Outcome (Accountability Priority)</label>
+          <input type="text" id="sd-must-win" placeholder="e.g. Master Arrays & complete SentinelAI data ingestion (V0.1)" required>
+        </div>
+        <div class="form-group">
+          <label>Available Focused Hours Today</label>
+          <input type="number" step="0.5" id="sd-hours" value="4.0" required>
+        </div>
+        <div class="form-group">
+          <label>College Constraints / Schedule</label>
+          <input type="text" id="sd-constraints" placeholder="e.g. College until 4 PM">
+        </div>
+        <div class="form-group">
+          <label>Energy Level</label>
+          <select id="sd-energy">
+            <option value="High" selected>High Energy</option>
+            <option value="Medium">Medium Energy</option>
+            <option value="Low">Low / Recovery</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%; margin-top:1rem;">Generate Optimized Plan & Must Win</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="end-day-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-content">
+      <div class="card-header">
+        <div class="card-title">END DAY — Complete Review & Generate Report</div>
+        <button class="btn btn-secondary" onclick="closeModal('end-day-modal')">X</button>
+      </div>
+      <form onsubmit="handleEndDaySubmit(event)">
+        <div class="form-group">
+          <label>Did you achieve today's Must Win?</label>
+          <select id="ed-must-win-result">
+            <option value="achieved" selected>Achieved (100% Complete)</option>
+            <option value="partially_achieved">Partially Achieved</option>
+            <option value="missed">Missed</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Focused Hours Completed Today</label>
+          <input type="number" step="0.5" id="ed-hours" value="4.0" required>
+        </div>
+        <div class="form-group">
+          <label>Key Learnings / Concepts Summary</label>
+          <textarea id="ed-learned" rows="3" placeholder="Summary of what you learned today..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Mistakes to Remember / Unresolved Issues</label>
+          <textarea id="ed-mistakes" rows="2" placeholder="Note any mistakes or weaknesses..."></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%; margin-top:1rem;">End Day & Save Report</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="start-sprint-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-content">
+      <div class="card-header">
+        <div class="card-title">🚀 START 120-DAY INTERVIEW SPRINT</div>
+        <button class="btn btn-secondary" onclick="closeModal('start-sprint-modal')">X</button>
+      </div>
+      <form onsubmit="handleStartSprintSubmit(event)">
+        <div class="form-group">
+          <label>Sprint Start Date</label>
+          <input type="date" id="sprint-start-date-input" required>
+        </div>
+        <button type="submit" class="btn btn-accent" style="width:100%; margin-top:1rem;">Activate 120-Day Sprint</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="weekly-review-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-content">
+      <div class="card-header">
+        <div class="card-title">📊 WEEKLY REVIEW — Strategic Audit</div>
+        <button class="btn btn-secondary" onclick="closeModal('weekly-review-modal')">X</button>
+      </div>
+      <form onsubmit="handleWeeklyReviewSubmit(event)">
+        <div class="form-group">
+          <label>1. Root cause of any missed work this week?</label>
+          <input type="text" id="wr-q1" placeholder="e.g. Underestimated SentinelAI setup" required>
+        </div>
+        <div class="form-group">
+          <label>2. Single biggest difficulty experienced?</label>
+          <input type="text" id="wr-q2" placeholder="e.g. Dynamic programming recursion trees" required>
+        </div>
+        <div class="form-group">
+          <label>3. How will you adjust your schedule next week?</label>
+          <input type="text" id="wr-q3" placeholder="e.g. Add 30m buffer slot daily" required>
+        </div>
+        <div class="form-group">
+          <label>4. Single most critical priority next week?</label>
+          <input type="text" id="wr-q4" placeholder="e.g. Complete SentinelAI V0.2 Classifier" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%; margin-top:1rem;">Save Weekly Review</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="real-mode-confirm-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-content">
+      <div class="card-header">
+        <div class="card-title">⚠️ SWITCH TO REAL MODE</div>
+        <button class="btn btn-secondary" onclick="closeModal('real-mode-confirm-modal')">X</button>
+      </div>
+      <p style="color:var(--text-secondary); margin-bottom:1.5rem; font-size:0.9rem;">
+        You are switching to <strong>REAL MODE</strong>. All progress will update your actual 120-day database!
+      </p>
+      <div style="display:flex; gap:1rem;">
+        <button class="btn btn-primary" style="flex:1;" onclick="confirmSwitchToRealMode()">Confirm REAL MODE</button>
+        <button class="btn btn-secondary" style="flex:1;" onclick="closeModal('real-mode-confirm-modal')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/controller.js?v=2"></script>
+</body>
+</html>

@@ -1,0 +1,127 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller / Executable builds
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py.cover
+.hypothesis/
+.pytest_cache/
+pytestdebug.log
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# Environments & Virtual Envs
+.env
+.env.local
+.env.*.local
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# SQLite / Database runtime files
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+*.bak
+!**/data/database/.gitkeep
+
+# User generated dynamic reports & backups
+data/backups/daily/*
+data/backups/weekly/*
+data/backups/test/*
+data/backups/demo/*
+!data/backups/daily/.gitkeep
+!data/backups/weekly/.gitkeep
+
+reports/daily/*
+reports/weekly/*
+reports/monthly/*
+reports/milestone/*
+reports/test/*
+reports/demo/*
+!reports/daily/.gitkeep
+!reports/weekly/.gitkeep
+!reports/monthly/.gitkeep
+!reports/milestone/.gitkeep
+
+exports/csv/*
+exports/json/*
+exports/markdown/*
+!exports/csv/.gitkeep
+!exports/json/.gitkeep
+!exports/markdown/.gitkeep
+
+# IDEs and Code Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+.claude/
+.gemini/
+.antigravity/
+
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
