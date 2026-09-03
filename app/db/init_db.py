@@ -5,7 +5,7 @@ from app.db.session import _engines, _sessionmakers, Base
 from app.db.models import (
     SprintConfig, RoadmapWeek, SentinelAIMilestone, Concept, 
     CollegeSubject, CollegeSyllabusTopic, Task, DayLog, DSALog, Mistake, CollegeEvent,
-    SpacedRevision, WeaknessRecord, WeeklyReview
+    SpacedRevision, WeaknessRecord, WeeklyReview, TimetableSlot, CalendarConfig
 )
 
 ROADMAP_WEEKS_DATA = [
@@ -177,6 +177,41 @@ ML_DL_CV_CONCEPTS = [
     ("CV", "video processing", "not_started")
 ]
 
+DEFAULT_TIMETABLE_SLOTS = [
+    # MONDAY
+    {"day_of_week": "Monday", "start_time": "09:30", "end_time": "10:20", "title": "Tutorial / G:2 | C:PES390 / R: 33-607 / S:K2P24KB", "category": "College", "spoken_announcement": "Attention! It is 9:30 AM. Time for PES390 Tutorial in Room 33-607.", "is_blocked": True, "source": "manual"},
+    {"day_of_week": "Monday", "start_time": "10:20", "end_time": "11:10", "title": "Tutorial / G:2 | C:PES390 / R: 33-607 / S:K2P24KB", "category": "College", "spoken_announcement": "Attention! It is 10:20 AM. Time for PES390 Tutorial in Room 33-607.", "is_blocked": True, "source": "manual"},
+    {"day_of_week": "Monday", "start_time": "11:10", "end_time": "12:00", "title": "Lecture / G:All | C:CSE472 / R: 33-607 / S:K2P24KB", "category": "College", "spoken_announcement": "Attention! It is 11:10 AM. Time for CSE472 Lecture in Room 33-607.", "is_blocked": True, "source": "manual"},
+    {"day_of_week": "Monday", "start_time": "12:00", "end_time": "12:50", "title": "Lecture / G:All | C:CSE472 / R: 33-607 / S:K2P24KB", "category": "College", "spoken_announcement": "Attention! It is 12:00 PM. Time for CSE472 Lecture in Room 33-607.", "is_blocked": True, "source": "manual"},
+    {"day_of_week": "Monday", "start_time": "13:40", "end_time": "14:30", "title": "Lecture / G:All | C:CSE471 / R: 34-309 / S:K2P24KB", "category": "College", "spoken_announcement": "Attention! It is 1:40 PM. Time for CSE471 Lecture in Room 34-309.", "is_blocked": True, "source": "manual"},
+    {"day_of_week": "Monday", "start_time": "14:30", "end_time": "15:20", "title": "Lecture / G:All | C:CSE471 / R: 34-309 / S:K2P24KB", "category": "College", "spoken_announcement": "Attention! It is 2:30 PM. Time for CSE471 Lecture in Room 34-309.", "is_blocked": True, "source": "manual"},
+    {"day_of_week": "Monday", "start_time": "15:20", "end_time": "16:10", "title": "Lecture / G:All | C:CSE408 / R: 34-309 / S:K2P24KB", "category": "College", "spoken_announcement": "Attention! It is 3:20 PM. Time for CSE408 Lecture in Room 34-309.", "is_blocked": True, "source": "manual"},
+    {"day_of_week": "Monday", "start_time": "16:10", "end_time": "17:00", "title": "Lecture / G:All | C:CSE408 / R: 34-309 / S:K2P24KB", "category": "College", "spoken_announcement": "Attention! It is 4:10 PM. Time for CSE408 Lecture in Room 34-309.", "is_blocked": True, "source": "manual"},
+
+    # TUESDAY
+    {"day_of_week": "Tuesday", "start_time": "10:20", "end_time": "11:10", "title": "Practical / G:0 | C:CSE408 / R: 33-604 / S:K2P24KB", "category": "College", "spoken_announcement": "Attention! It is 10:20 AM. Time for CSE408 Practical in Room 33-604.", "is_blocked": True, "source": "manual"},
+    {"day_of_week": "Tuesday", "start_time": "11:10", "end_time": "12:00", "title": "Practical / G:0 | C:CSE408 / R: 33-604 / S:K2P24KB", "category": "College", "spoken_announcement": "Attention! It is 11:10 AM. Time for CSE408 Practical in Room 33-604.", "is_blocked": True, "source": "manual"},
+    {"day_of_week": "Tuesday", "start_time": "14:30", "end_time": "15:20", "title": "Lecture / G:All | C:PEA306 / R: 34-109 / S:K2P24KB", "category": "College", "spoken_announcement": "Attention! It is 2:30 PM. Time for PEA306 Lecture in Room 34-109.", "is_blocked": True, "source": "manual"},
+    {"day_of_week": "Tuesday", "start_time": "15:20", "end_time": "16:10", "title": "Practical / G:0 | C:CSE471 / R: 34-109 / S:K2P24KB", "category": "College", "spoken_announcement": "Attention! It is 3:20 PM. Time for CSE471 Practical in Room 34-109.", "is_blocked": True, "source": "manual"},
+    {"day_of_week": "Tuesday", "start_time": "16:10", "end_time": "17:00", "title": "Practical / G:0 | C:CSE471 / R: 34-109 / S:K2P24KB", "category": "College", "spoken_announcement": "Attention! It is 4:10 PM. Time for CSE471 Practical in Room 34-109.", "is_blocked": True, "source": "manual"},
+
+    # WEDNESDAY
+    {"day_of_week": "Wednesday", "start_time": "11:10", "end_time": "12:00", "title": "Lecture / G:All | C:CSE408 / R: 33-603 / S:K2P24KB", "category": "College", "spoken_announcement": "Attention! It is 11:10 AM. Time for CSE408 Lecture in Room 33-603.", "is_blocked": True, "source": "manual"},
+    {"day_of_week": "Wednesday", "start_time": "12:00", "end_time": "12:50", "title": "Lecture / G:All | C:FIN214 / R: 28-402 / S:K3O2412", "category": "College", "spoken_announcement": "Attention! It is 12:00 PM. Time for FIN214 Lecture in Room 28-402.", "is_blocked": True, "source": "manual"},
+    {"day_of_week": "Wednesday", "start_time": "14:30", "end_time": "15:20", "title": "Lecture / G:All | C:PEA306 / R: 34-101 / S:K2P24KB", "category": "College", "spoken_announcement": "Attention! It is 2:30 PM. Time for PEA306 Lecture in Room 34-101.", "is_blocked": True, "source": "manual"},
+    {"day_of_week": "Wednesday", "start_time": "15:20", "end_time": "16:10", "title": "Practical / G:0 | C:CSE472 / R: 34-101 / S:K2P24KB", "category": "College", "spoken_announcement": "Attention! It is 3:20 PM. Time for CSE472 Practical in Room 34-101.", "is_blocked": True, "source": "manual"},
+    {"day_of_week": "Wednesday", "start_time": "16:10", "end_time": "17:00", "title": "Practical / G:0 | C:CSE472 / R: 34-101 / S:K2P24KB", "category": "College", "spoken_announcement": "Attention! It is 4:10 PM. Time for CSE472 Practical in Room 34-101.", "is_blocked": True, "source": "manual"},
+
+    # THURSDAY
+    {"day_of_week": "Thursday", "start_time": "12:00", "end_time": "12:50", "title": "Lecture / G:All | C:FIN214 / R: 28-402 / S:K3O2412", "category": "College", "spoken_announcement": "Attention! It is 12:00 PM. Time for FIN214 Lecture in Room 28-402.", "is_blocked": True, "source": "manual"},
+    {"day_of_week": "Thursday", "start_time": "13:40", "end_time": "14:30", "title": "Tutorial / G:2 | C:PEA306 / R: 33-506 / S:K2P24KB", "category": "College", "spoken_announcement": "Attention! It is 1:40 PM. Time for PEA306 Tutorial in Room 33-506.", "is_blocked": True, "source": "manual"},
+    {"day_of_week": "Thursday", "start_time": "14:30", "end_time": "15:20", "title": "Lecture / G:All | C:PES390 / R: 33-506 / S:K2P24KB", "category": "College", "spoken_announcement": "Attention! It is 2:30 PM. Time for PES390 Lecture in Room 33-506.", "is_blocked": True, "source": "manual"},
+
+    # FRIDAY
+    {"day_of_week": "Friday", "start_time": "12:00", "end_time": "12:50", "title": "Lecture / G:All | C:FIN214 / R: 28-402 / S:K3O2412", "category": "College", "spoken_announcement": "Attention! It is 12:00 PM. Time for FIN214 Lecture in Room 28-402.", "is_blocked": True, "source": "manual"},
+    {"day_of_week": "Friday", "start_time": "14:30", "end_time": "15:20", "title": "Lecture / G:All | C:PES390 / R: 33-608 / S:K2P24KB", "category": "College", "spoken_announcement": "Attention! It is 2:30 PM. Time for PES390 Lecture in Room 33-608.", "is_blocked": True, "source": "manual"}
+]
+
 COLLEGE_SUBJECTS = [
     {
         "name": "Deep Learning",
@@ -206,8 +241,10 @@ COLLEGE_SUBJECTS = [
 ]
 
 async def safe_schema_upgrade(engine):
-    """Executes safe ALTER TABLE statements to add new columns to existing SQLite tables without wiping data."""
+    """Executes safe ALTER TABLE statements and table creations for new features without wiping data."""
     async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
         # Check day_logs columns
         res = await conn.execute(text("PRAGMA table_info(day_logs);"))
         columns = [row[1] for row in res.fetchall()]
@@ -229,7 +266,9 @@ async def init_db_for_mode(mode: str = "REAL", force_recreate: bool = False):
     
     async with engine.begin() as conn:
         if force_recreate:
+            await conn.execute(text("PRAGMA foreign_keys = OFF;"))
             await conn.run_sync(Base.metadata.drop_all)
+            await conn.execute(text("PRAGMA foreign_keys = ON;"))
         await conn.run_sync(Base.metadata.create_all)
 
     await safe_schema_upgrade(engine)
@@ -285,7 +324,11 @@ async def init_db_for_mode(mode: str = "REAL", force_recreate: bool = False):
                         t_status = "mastered" if is_demo and "Perceptron" in top else "not_started"
                         session.add(CollegeSyllabusTopic(subject_id=subj.id, unit_name=unit_name, topic_name=top, status=t_status))
                         
-            # 6. Seed Demo Logs if DEMO mode (Constraint 7)
+            # 6. Seed Timetable Slots across REAL, TEST, and DEMO modes
+            for slot_data in DEFAULT_TIMETABLE_SLOTS:
+                session.add(TimetableSlot(**slot_data))
+
+            # 7. Seed Demo Logs if DEMO mode (Constraint 7)
             if is_demo:
                 for i in range(45):
                     session.add(DSALog(

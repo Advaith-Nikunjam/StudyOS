@@ -230,17 +230,17 @@ function renderWallState(data) {
 
     activeAssigns.forEach(a => {
       urgentHtml += `
-        <div class="urgent-alert-card" style="border-color:var(--status-yellow); border-left-color:var(--status-yellow);">
-          <div style="display:flex; align-items:center; gap:1rem;">
-            <span style="font-size:1.5rem;">📝</span>
+        <div class="urgent-alert-card" style="border-color:#F59E0B; border-left:6px solid #F59E0B; background:rgba(22, 30, 49, 0.95);">
+          <div style="display:flex; align-items:center; gap:1.2rem;">
+            <span style="font-size:1.8rem; flex-shrink:0;">📝</span>
             <div style="text-align:left;">
-              <div style="font-weight:700; font-size:1.1rem; color:var(--text-primary);">${a.title}</div>
-              <div style="font-size:0.8rem; color:var(--text-muted);">${a.category} • Est. ${a.est_mins || 45} mins</div>
+              <div style="font-weight:800; font-size:1.15rem; color:#F8FAFC; line-height:1.3;">${a.title}</div>
+              <div style="font-size:0.85rem; color:#CBD5E1; font-weight:500; margin-top:0.2rem;">${a.category} • Est. ${a.est_mins || 45} mins</div>
             </div>
           </div>
-          <div>
-            <span style="font-size:0.85rem; color:var(--status-yellow); margin-right:1rem; font-weight:600;">Due: ${a.due_date}</span>
-            <button class="btn btn-secondary" style="border-color:var(--status-yellow); color:var(--status-yellow); font-size:0.75rem;">ASSIGNMENT</button>
+          <div style="display:flex; align-items:center; gap:0.75rem; flex-shrink:0;">
+            <span class="badge badge-yellow-vivid">Due: ${a.due_date}</span>
+            <button class="btn btn-secondary" style="border-color:#F59E0B; color:#FCD34D; font-weight:700; font-size:0.78rem; background:rgba(245,158,11,0.12); padding:0.35rem 0.85rem;">ASSIGNMENT</button>
           </div>
         </div>
       `;
@@ -248,17 +248,17 @@ function renderWallState(data) {
 
     urgentEvts.forEach(e => {
       urgentHtml += `
-        <div class="urgent-alert-card" style="border-color:var(--status-red); border-left-color:var(--status-red);">
-          <div style="display:flex; align-items:center; gap:1rem;">
-            <span style="font-size:1.5rem;">🎓</span>
+        <div class="urgent-alert-card" style="border-color:#EF4444; border-left:6px solid #EF4444; background:rgba(22, 30, 49, 0.95);">
+          <div style="display:flex; align-items:center; gap:1.2rem;">
+            <span style="font-size:1.8rem; flex-shrink:0;">🎓</span>
             <div style="text-align:left;">
-              <div style="font-weight:700; font-size:1.1rem; color:var(--text-primary);">${e.title}</div>
-              <div style="font-size:0.8rem; color:var(--text-muted);">${e.subject || 'College Event'}</div>
+              <div style="font-weight:800; font-size:1.15rem; color:#F8FAFC; line-height:1.3;">${e.title}</div>
+              <div style="font-size:0.85rem; color:#CBD5E1; font-weight:500; margin-top:0.2rem;">${e.subject || 'College Event'}</div>
             </div>
           </div>
-          <div>
-            <span style="font-size:0.85rem; color:var(--status-red); margin-right:1rem; font-weight:600;">Due: ${e.due_date}</span>
-            <button class="btn btn-secondary" style="border-color:var(--status-red); color:var(--status-red); font-size:0.75rem;">EVENT</button>
+          <div style="display:flex; align-items:center; gap:0.75rem; flex-shrink:0;">
+            <span class="badge badge-red-vivid">Due: ${e.due_date}</span>
+            <button class="btn btn-secondary" style="border-color:#EF4444; color:#FF8A8A; font-weight:700; font-size:0.78rem; background:rgba(239,68,68,0.12); padding:0.35rem 0.85rem;">EVENT</button>
           </div>
         </div>
       `;
@@ -266,17 +266,17 @@ function renderWallState(data) {
 
     overdueRevs.forEach(r => {
       urgentHtml += `
-        <div class="urgent-alert-card" style="border-color:var(--status-orange); border-left-color:var(--status-orange);">
-          <div style="display:flex; align-items:center; gap:1rem;">
-            <span style="font-size:1.5rem;">🔄</span>
+        <div class="urgent-alert-card" style="border-color:#F97316; border-left:6px solid #F97316; background:rgba(22, 30, 49, 0.95);">
+          <div style="display:flex; align-items:center; gap:1.2rem;">
+            <span style="font-size:1.8rem; flex-shrink:0;">🔄</span>
             <div style="text-align:left;">
-              <div style="font-weight:700; font-size:1.1rem; color:var(--text-primary);">${r.concept_name}</div>
-              <div style="font-size:0.8rem; color:var(--text-muted);">${r.domain} Revision Overdue (${r.days_overdue || 1}d)</div>
+              <div style="font-weight:800; font-size:1.15rem; color:#F8FAFC; line-height:1.3;">${r.concept_name}</div>
+              <div style="font-size:0.85rem; color:#CBD5E1; font-weight:500; margin-top:0.2rem;">${r.domain} • Overdue (${r.days_overdue || 1}d)</div>
             </div>
           </div>
-          <div>
-            <span style="font-size:0.85rem; color:var(--status-orange); margin-right:1rem; font-weight:600;">Revision Overdue</span>
-            <button class="btn btn-secondary" style="border-color:var(--status-orange); color:var(--status-orange); font-size:0.75rem;">REVISE</button>
+          <div style="display:flex; align-items:center; gap:0.75rem; flex-shrink:0;">
+            <span class="badge badge-orange-vivid">Revision Overdue</span>
+            <button class="btn btn-secondary" style="border-color:#F97316; color:#FDBA74; font-weight:700; font-size:0.78rem; background:rgba(249,115,22,0.12); padding:0.35rem 0.85rem;">REVISE</button>
           </div>
         </div>
       `;
@@ -285,20 +285,62 @@ function renderWallState(data) {
     if (urgentHtml) {
       urgentContainer.innerHTML = urgentHtml;
     } else {
-      urgentContainer.innerHTML = `<div style="color:var(--text-muted);">All assignments and revisions are up to date! Great work!</div>`;
+      urgentContainer.innerHTML = `<div style="color:var(--text-muted); font-size:1.1rem; padding:2rem;">All assignments and revisions are up to date! Great work!</div>`;
     }
   }
 
-  // Slide 4 Urgent Conditional Trigger
+  // Slide 4 Urgent & Slide 5 Timetable Conditional Triggers
   const pill4 = document.getElementById('pill-4');
   if (data.has_pending_urgent) {
-    totalScreens = 4;
     if (pill4) pill4.style.display = 'inline-block';
   } else {
-    totalScreens = 3;
     if (pill4) pill4.style.display = 'none';
     if (currentScreen === 4) setScreen(1);
   }
+
+  // Slide 5 Timetable Data Binding
+  const ttContainer = document.getElementById('wall-timetable-container');
+  if (ttContainer && data.today_timetable) {
+    const slots = data.today_timetable;
+    if (slots.length > 0) {
+      const categoryBadges = {
+        'Exam': 'badge-red-vivid',
+        'Assignment': 'badge-yellow-vivid',
+        'College': 'badge-indigo',
+        'DSA': 'badge-cyan',
+        'ML': 'badge-green',
+        'Break': 'badge-yellow'
+      };
+
+      ttContainer.innerHTML = slots.map(s => {
+        const badgeClass = categoryBadges[s.category] || 'badge-indigo';
+        return `
+          <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-surface); border:1px solid var(--border-bright); border-radius:var(--radius-md); padding:1rem 1.5rem; box-shadow:0 4px 12px rgba(0,0,0,0.3);">
+            <div style="display:flex; align-items:center; gap:1.25rem;">
+              <div style="font-family:var(--font-mono); font-weight:800; font-size:1.1rem; color:var(--accent-cyan); min-width:130px;">
+                ${s.start_time} - ${s.end_time}
+              </div>
+              <div>
+                <div style="font-weight:800; font-size:1.2rem; color:#F8FAFC;">
+                  ${s.title}
+                  ${s.is_blocked ? '<span style="font-size:0.75rem; color:var(--status-yellow); margin-left:0.5rem; border:1px solid rgba(245,158,11,0.5); padding:0.15rem 0.5rem; border-radius:4px;">TIME BLOCKED</span>' : ''}
+                  ${s.source === 'ical_sync' || s.source === 'google_cal' ? '<span style="font-size:0.75rem; color:var(--accent-indigo); margin-left:0.3rem;">🔗 CALENDAR SYNCED</span>' : ''}
+                </div>
+                <div style="font-size:0.85rem; color:#CBD5E1; margin-top:0.2rem;">Spoken: "${s.spoken_announcement || s.title}"</div>
+              </div>
+            </div>
+            <div>
+              <span class="badge ${badgeClass}" style="font-size:0.85rem; padding:0.4rem 0.85rem;">${s.category}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    } else {
+      ttContainer.innerHTML = `<div style="color:var(--text-muted); font-size:1.1rem; padding:2rem; text-align:center;">No timetable slots scheduled for today. Add slots or sync your Google Calendar from the Dashboard!</div>`;
+    }
+  }
+
+  totalScreens = 5;
 }
 
 function handleGlobalKeyDown(e) {
@@ -308,10 +350,8 @@ function handleGlobalKeyDown(e) {
     e.preventDefault(); prevScreen();
   } else if (key === 'ArrowRight' || key === 'd' || key === 'D') {
     e.preventDefault(); nextScreen();
-  } else if (['1','2','3'].includes(key)) {
+  } else if (['1','2','3','4','5'].includes(key)) {
     e.preventDefault(); setScreen(parseInt(key)); triggerManualNavigation();
-  } else if (key === '4' && totalScreens >= 4) {
-    e.preventDefault(); setScreen(4); triggerManualNavigation();
   }
 }
 
@@ -319,8 +359,12 @@ function startRotationTimer() {
   if (rotationInterval) clearInterval(rotationInterval);
   rotationInterval = setInterval(() => {
     if (!isSleepMode && !isAutoPaused) {
-      let nextNum = (currentScreen % totalScreens) + 1;
-      setScreen(nextNum);
+      let target = (currentScreen % 5) + 1;
+      const pill4 = document.getElementById('pill-4');
+      if (target === 4 && pill4 && pill4.style.display === 'none') {
+        target = 5;
+      }
+      setScreen(target);
     }
   }, 25000);
 }
@@ -344,21 +388,29 @@ function triggerManualNavigation() {
 }
 
 function nextScreen() {
-  let target = (currentScreen % totalScreens) + 1;
+  let target = (currentScreen % 5) + 1;
+  const pill4 = document.getElementById('pill-4');
+  if (target === 4 && pill4 && pill4.style.display === 'none') {
+    target = 5;
+  }
   setScreen(target);
   triggerManualNavigation();
 }
 
 function prevScreen() {
-  let target = (currentScreen - 2 + totalScreens) % totalScreens + 1;
+  let target = (currentScreen - 2 + 5) % 5 + 1;
+  const pill4 = document.getElementById('pill-4');
+  if (target === 4 && pill4 && pill4.style.display === 'none') {
+    target = 3;
+  }
   setScreen(target);
   triggerManualNavigation();
 }
 
 function setScreen(num) {
-  if (num > totalScreens) num = 1;
+  if (num > 5) num = 1;
   currentScreen = num;
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 5; i++) {
     const scr = document.getElementById(`screen-${i}`);
     const pill = document.getElementById(`pill-${i}`);
     if (scr) scr.style.display = (i === num) ? 'flex' : 'none';
@@ -391,3 +443,73 @@ async function handleUserWakeInteraction(e) {
     fetchDisplayState();
   }
 }
+
+// Web Speech + Ubuntu Linux OS Voice Announcement Engine for Wall Kiosk
+let wallSpokenLog = new Set();
+let wallTimetableSlots = [];
+let wallVoiceEnabled = true;
+
+function toggleWallVoice() {
+  wallVoiceEnabled = !wallVoiceEnabled;
+  const btn = document.getElementById('wall-voice-btn');
+  if (btn) btn.textContent = wallVoiceEnabled ? "🔊 Voice Alerts: ON" : "🔇 Voice Alerts: OFF";
+}
+
+async function speakWallAnnouncement(text) {
+  if (!wallVoiceEnabled) return;
+  
+  // 1. Visual Toast Banner
+  const toast = document.getElementById('wall-announcement-toast');
+  const toastText = document.getElementById('wall-toast-text');
+  if (toast && toastText) {
+    toastText.textContent = text;
+    toast.style.display = 'flex';
+    setTimeout(() => { toast.style.display = 'none'; }, 10000);
+  }
+
+  // 2. Web Speech API (Chrome/Browser)
+  if ('speechSynthesis' in window) {
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+      window.speechSynthesis.speak(utterance);
+    } catch (err) { console.warn("Wall Speech Error:", err); }
+  }
+
+  // 3. Ubuntu / Linux Backend Speech API (spd-say / espeak)
+  try {
+    await fetch('/api/v1/system/speak', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({text})
+    });
+  } catch (e) {}
+}
+
+setInterval(() => {
+  if (isSleepMode || !wallVoiceEnabled) return;
+  const now = new Date();
+  const timeHHMM = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  const dateISO = now.toISOString().split('T')[0];
+
+  const cachedStr = localStorage.getItem('studyos_wall_cache');
+  if (cachedStr) {
+    try {
+      const parsed = JSON.parse(cachedStr);
+      wallTimetableSlots = parsed.today_timetable || [];
+    } catch (e) {}
+  }
+
+  wallTimetableSlots.forEach(s => {
+    if (s.start_time === timeHHMM) {
+      const key = `wall_${dateISO}_${s.id}_${timeHHMM}`;
+      if (!wallSpokenLog.has(key)) {
+        wallSpokenLog.add(key);
+        const text = s.spoken_announcement || `Attention! ${s.title} is starting now at ${s.start_time}.`;
+        speakWallAnnouncement(text);
+      }
+    }
+  });
+}, 20000);

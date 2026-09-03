@@ -1,4 +1,5 @@
 import shutil
+import subprocess
 from datetime import datetime, date, timedelta, timezone
 from typing import Dict, Any, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Body
@@ -11,7 +12,7 @@ from app.db.init_db import init_db_for_mode
 from app.db.models import (
     SprintConfig, RoadmapWeek, Task, DSALog, Mistake, Concept, SentinelAIMilestone, 
     CollegeSubject, CollegeEvent, CollegeSyllabusTopic, DayLog, ReportLog, ExamPeriod,
-    SpacedRevision, WeaknessRecord, WeeklyReview
+    SpacedRevision, WeaknessRecord, WeeklyReview, TimetableSlot, CalendarConfig
 )
 from app.services.roadmap_service import RoadmapService
 from app.services.jarvis_engine import JarvisEngine
@@ -22,6 +23,7 @@ from app.services.weakness_service import WeaknessService
 from app.services.recovery_service import RecoveryService
 from app.services.weekly_review_service import WeeklyReviewService
 from app.services.daily_allocation_service import DailyAllocationService
+from app.services.calendar_service import CalendarService
 
 router = APIRouter()
 
@@ -91,6 +93,19 @@ async def get_display_state(db: AsyncSession = Depends(get_db)):
 
     # 7. Recovery Mode
     recovery_data = await RecoveryService.get_recovery_plan(db, today_str=today_str)
+
+    # 8. Timetable & Calendar Sync Slots for Today
+    today_dow = datetime.now().strftime("%A")
+    tt_res = await db.execute(
+        select(TimetableSlot).where(
+            TimetableSlot.is_active == True,
+            (TimetableSlot.day_of_week.in_([today_dow, "Daily", "All"])) | (TimetableSlot.date_str == today_str)
+        ).order_by(TimetableSlot.start_time)
+    )
+    today_timetable_slots = tt_res.scalars().all()
+
+    cfg_res = await db.execute(select(CalendarConfig))
+    calendar_cfg = cfg_res.scalar_one_or_none()
 
     # Conditional Screen 4 trigger: true if active assignments, overdue tasks, urgent events, overdue revisions, or critical weaknesses exist
     has_critical_weakness = any(w["severity"] == "critical" for w in weakness_data["top_weaknesses"])
@@ -163,7 +178,21 @@ async def get_display_state(db: AsyncSession = Depends(get_db)):
         "overdue_revisions_count": revisions_data["overdue_count"],
         "urgent_events": [
             {"title": e.title, "due_date": e.due_date, "subject": e.subject_name} for e in urgent_events[:3]
-        ]
+        ],
+        "today_timetable": [
+            {
+                "id": s.id, "title": s.title, "day_of_week": s.day_of_week, "date_str": s.date_str,
+                "start_time": s.start_time, "end_time": s.end_time, "category": s.category,
+                "spoken_announcement": s.spoken_announcement or f"Attention! {s.title} is starting now at {s.start_time}.",
+                "is_blocked": s.is_blocked, "is_active": s.is_active, "source": s.source
+            } for s in today_timetable_slots
+        ],
+        "calendar_config": {
+            "ics_url": calendar_cfg.ics_url if calendar_cfg else None,
+            "auto_sync": calendar_cfg.auto_sync if calendar_cfg else True,
+            "voice_enabled": calendar_cfg.voice_enabled if calendar_cfg else True,
+            "last_synced_at": calendar_cfg.last_synced_at.isoformat() if (calendar_cfg and calendar_cfg.last_synced_at) else None
+        }
     }
 
 @router.get("/api/v1/dashboard")
@@ -476,6 +505,12 @@ async def switch_environment(
         "message": msg,
         "env_mode": active_mode
     }
+
+@router.post("/api/v1/demo/reset")
+async def reset_demo_mode():
+    """Resets DEMO mode database back to the rich 7-day showcase state."""
+    await init_db_for_mode("DEMO", force_recreate=True)
+    return {"message": "DEMO mode reset back to CURATED BASELINE state with 7-day roadmap timetable showcase data."}
 
 @router.get("/api/v1/roadmap")
 async def get_full_roadmap(db: AsyncSession = Depends(get_db)):
@@ -794,3 +829,165 @@ async def trigger_backup(
         "json_export": json_file,
         "csv_exports": csv_files
     }
+
+# ==========================================
+# TIMETABLE & CALENDAR SYNC API ENDPOINTS
+# ==========================================
+
+@router.get("/api/v1/timetable")
+async def get_timetable_slots(
+    day: Optional[str] = Query(None),
+    db: AsyncSession = Depends(get_db)
+):
+    """Fetches all timetable & calendar synced schedule slots."""
+    stmt = select(TimetableSlot).where(TimetableSlot.is_active == True)
+    if day:
+        stmt = stmt.where((TimetableSlot.day_of_week == day) | (TimetableSlot.day_of_week == "Daily") | (TimetableSlot.day_of_week == "All"))
+    stmt = stmt.order_by(TimetableSlot.start_time)
+    
+    res = await db.execute(stmt)
+    slots = res.scalars().all()
+    
+    cfg_res = await db.execute(select(CalendarConfig))
+    cfg = cfg_res.scalar_one_or_none()
+    
+    return {
+        "slots": [
+            {
+                "id": s.id, "day_of_week": s.day_of_week, "date_str": s.date_str,
+                "start_time": s.start_time, "end_time": s.end_time, "title": s.title,
+                "category": s.category, "spoken_announcement": s.spoken_announcement,
+                "is_blocked": s.is_blocked, "is_active": s.is_active, "source": s.source
+            } for s in slots
+        ],
+        "calendar_config": {
+            "ics_url": cfg.ics_url if cfg else None,
+            "auto_sync": cfg.auto_sync if cfg else True,
+            "voice_enabled": cfg.voice_enabled if cfg else True,
+            "last_synced_at": cfg.last_synced_at.isoformat() if (cfg and cfg.last_synced_at) else None
+        }
+    }
+
+@router.post("/api/v1/timetable")
+async def create_timetable_slot(
+    body: Dict[str, Any] = Body(...),
+    db: AsyncSession = Depends(get_db)
+):
+    """Creates a new timetable slot."""
+    title = body.get("title", "").strip()
+    if not title:
+        raise HTTPException(status_code=400, detail="Title is required")
+        
+    start_time = body.get("start_time", "09:00")
+    spoken = body.get("spoken_announcement") or f"Attention! {title} is starting now at {start_time}."
+    
+    slot = TimetableSlot(
+        day_of_week=body.get("day_of_week", "Daily"),
+        date_str=body.get("date_str"),
+        start_time=start_time,
+        end_time=body.get("end_time", "10:00"),
+        title=title,
+        category=body.get("category", "College"),
+        spoken_announcement=spoken,
+        is_blocked=body.get("is_blocked", True),
+        is_active=True,
+        source="manual"
+    )
+    db.add(slot)
+    await db.commit()
+    await db.refresh(slot)
+    return {"message": "Timetable slot created successfully.", "id": slot.id}
+
+@router.put("/api/v1/timetable/{slot_id}")
+async def update_timetable_slot(
+    slot_id: int,
+    body: Dict[str, Any] = Body(...),
+    db: AsyncSession = Depends(get_db)
+):
+    """Updates an existing timetable slot."""
+    res = await db.execute(select(TimetableSlot).where(TimetableSlot.id == slot_id))
+    slot = res.scalar_one_or_none()
+    if not slot:
+        raise HTTPException(status_code=404, detail="Timetable slot not found")
+        
+    if "title" in body: slot.title = body["title"]
+    if "day_of_week" in body: slot.day_of_week = body["day_of_week"]
+    if "date_str" in body: slot.date_str = body["date_str"]
+    if "start_time" in body: slot.start_time = body["start_time"]
+    if "end_time" in body: slot.end_time = body["end_time"]
+    if "category" in body: slot.category = body["category"]
+    if "spoken_announcement" in body: slot.spoken_announcement = body["spoken_announcement"]
+    if "is_blocked" in body: slot.is_blocked = body["is_blocked"]
+    if "is_active" in body: slot.is_active = body["is_active"]
+    
+    await db.commit()
+    return {"message": "Timetable slot updated successfully."}
+
+@router.delete("/api/v1/timetable/{slot_id}")
+async def delete_timetable_slot(
+    slot_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    """Deletes a timetable slot."""
+    res = await db.execute(select(TimetableSlot).where(TimetableSlot.id == slot_id))
+    slot = res.scalar_one_or_none()
+    if not slot:
+        raise HTTPException(status_code=404, detail="Timetable slot not found")
+        
+    await db.delete(slot)
+    await db.commit()
+    return {"message": "Timetable slot deleted successfully."}
+
+@router.post("/api/v1/calendar/sync")
+async def sync_calendar_feed(
+    body: Dict[str, Any] = Body(...),
+    db: AsyncSession = Depends(get_db)
+):
+    """Syncs external Google Calendar / iCal URL and imports VEVENT records as time-blocked slots."""
+    ics_url = body.get("ics_url", "").strip()
+    if not ics_url:
+        # Check saved config
+        cfg_res = await db.execute(select(CalendarConfig))
+        cfg = cfg_res.scalar_one_or_none()
+        if cfg and cfg.ics_url:
+            ics_url = cfg.ics_url
+        else:
+            raise HTTPException(status_code=400, detail="No iCal / Google Calendar URL provided")
+            
+    result = await CalendarService.sync_remote_feed(db, ics_url)
+    return result
+
+@router.post("/api/v1/calendar/import")
+async def import_calendar_file(
+    body: Dict[str, Any] = Body(...),
+    db: AsyncSession = Depends(get_db)
+):
+    """Imports raw iCal (.ics) file text content."""
+    content = body.get("ics_content", "").strip()
+    if not content:
+        raise HTTPException(status_code=400, detail="ics_content is required")
+        
+    count = await CalendarService.import_ics_events(db, content, source="ics_file_upload")
+    return {"message": f"Successfully imported {count} calendar events.", "events_imported": count}
+
+@router.post("/api/v1/system/speak")
+async def system_speak_announcement(body: Dict[str, Any] = Body(...)):
+    """Executes Linux / Ubuntu OS speech command (spd-say / espeak / say) if available on the host machine."""
+    text = body.get("text", "").strip()
+    if not text:
+        return {"status": "ignored"}
+        
+    try:
+        if shutil.which("spd-say"):
+            subprocess.Popen(["spd-say", "-r", "0", "-p", "0", text])
+            return {"status": "success", "engine": "spd-say"}
+        elif shutil.which("espeak"):
+            subprocess.Popen(["espeak", text])
+            return {"status": "success", "engine": "espeak"}
+        elif shutil.which("say"):
+            subprocess.Popen(["say", text])
+            return {"status": "success", "engine": "say"}
+    except Exception as e:
+        print("System speech exception:", e)
+        
+    return {"status": "client_speech_only"}

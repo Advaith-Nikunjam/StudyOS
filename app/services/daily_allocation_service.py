@@ -5,7 +5,7 @@ from sqlalchemy import select, and_
 
 from app.db.models import (
     SprintConfig, RoadmapWeek, Task, DSALog, Concept, 
-    SentinelAIMilestone, CollegeEvent, SpacedRevision
+    SentinelAIMilestone, CollegeEvent, SpacedRevision, TimetableSlot
 )
 from app.services.revision_service import SpacedRevisionService
 from app.services.recovery_service import RecoveryService
@@ -328,7 +328,8 @@ class DailyAllocationService:
         recovery_active = rec_plan["recovery_mode_active"]
 
         # 7. Construct Deterministic Task List (2–5 tasks, max scheduled cap 210m)
-        # Priority Order: 1. College, 2. Today's Must Win, 3. DSA Learning, 4. ML/DL Learning, 5. SentinelAI Application, 6. Revision, 7. Recovery
+        # Priorities: Roadmap Tasks (DSA, ML, SentinelAI, Revision) ALWAYS get full 210m allocation in Normal Mode!
+        # Timetable slots are displayed on Schedule Hub & Wall Display for voice announcements, but do NOT reduce roadmap budget.
         scheduled_tasks: List[Dict[str, Any]] = []
         total_mins = 0
         MAX_SCHEDULED_MINS = 210  # 240m budget - 30m protected buffer

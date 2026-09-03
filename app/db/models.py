@@ -240,3 +240,30 @@ class JarvisLog(Base):
     confirmed = Column(Boolean, default=True)
     status = Column(String, default="success") # success, pending_confirmation, rejected
 
+class TimetableSlot(Base):
+    __tablename__ = "timetable_slots"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    day_of_week = Column(String, index=True) # Monday..Sunday, Daily
+    date_str = Column(String, nullable=True, index=True) # Specific date if synced (e.g. "2026-09-10")
+    start_time = Column(String, index=True) # HH:MM (e.g. "09:00")
+    end_time = Column(String)               # HH:MM (e.g. "11:00")
+    title = Column(String)                  # e.g. "DAA Exam", "College Lecture"
+    category = Column(String, default="College") # College, Exam, Assignment, DSA, ML, DL, SentinelAI, Break, General
+    spoken_announcement = Column(Text, nullable=True) # Text spoken out loud at start time
+    is_blocked = Column(Boolean, default=True) # True = blocks roadmap tasks during window
+    is_active = Column(Boolean, default=True)
+    source = Column(String, default="manual")  # manual, ical_sync, google_cal
+    external_event_id = Column(String, nullable=True, index=True) # UID from iCal
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+class CalendarConfig(Base):
+    __tablename__ = "calendar_config"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    ics_url = Column(String, nullable=True)
+    auto_sync = Column(Boolean, default=True)
+    voice_enabled = Column(Boolean, default=True)
+    last_synced_at = Column(DateTime, nullable=True)
+
+

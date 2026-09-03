@@ -14,6 +14,31 @@ document.addEventListener('DOMContentLoaded', () => {
   setInterval(loadDashboardData, 15000); // Auto-refresh every 15s
 });
 
+function openModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.style.display = 'flex';
+  }
+}
+
+function closeModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.style.display = 'none';
+  }
+}
+
+function openRoadmapHub(el) { if (el) setActiveNavItem(el); openModal('roadmap-modal'); if (typeof loadRoadmapView === 'function') loadRoadmapView(); }
+function openDsaTrackerHub(el) { if (el) setActiveNavItem(el); openModal('dsa-modal'); }
+function openMlConceptsHub(el) { if (el) setActiveNavItem(el); openModal('ml-modal'); }
+function openSentinelAiHub(el) { if (el) setActiveNavItem(el); openModal('sentinelai-modal'); }
+function openRevisionsHub(el) { if (el) setActiveNavItem(el); openModal('revisions-modal'); }
+function openWeaknessRadarHub(el) { if (el) setActiveNavItem(el); openModal('weakness-modal'); }
+function openRecoveryHub(el) { if (el) setActiveNavItem(el); openModal('recovery-modal'); }
+function openExamModeHub(el) { if (el) setActiveNavItem(el); openModal('exam-mode-modal'); }
+function openReportsHub(el) { if (el) setActiveNavItem(el); openModal('reports-modal'); }
+function openSettingsHub(el) { if (el) setActiveNavItem(el); openModal('settings-modal'); }
+
 let globalSprintStatus = null;
 let globalMustWin = null;
 let globalTasks = [];
@@ -880,4 +905,414 @@ async function triggerManualBackup() {
   const res = await fetch('/api/v1/backup/create', {method: 'POST'});
   const data = await res.json();
   alert(`Backup Created Successfully!\n• SQLite: ${data.sqlite_backup}\n• JSON Export: ${data.json_export}`);
+}
+
+// ==========================================
+// TIMETABLE & VOICE ANNOUNCEMENT ENGINE
+// ==========================================
+let cachedTimetableSlots = [];
+let voiceAnnouncementsEnabled = true;
+let spokenSlotsLog = new Set();
+let timetableDayFilter = 'All';
+
+function toggleVoiceAnnouncements() {
+  voiceAnnouncementsEnabled = !voiceAnnouncementsEnabled;
+  const btn = document.getElementById('voice-toggle-btn');
+  if (btn) {
+    btn.textContent = voiceAnnouncementsEnabled ? "🔊 Voice: ON" : "🔇 Voice: OFF";
+    btn.style.color = voiceAnnouncementsEnabled ? "#A5B4FC" : "#64748B";
+  }
+}
+
+function speakAnnouncement(text) {
+  if (!voiceAnnouncementsEnabled || !('speechSynthesis' in window)) return;
+  try {
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+    window.speechSynthesis.speak(utterance);
+  } catch (err) {
+    console.warn("Web Speech Error:", err);
+  }
+}
+
+async function openTimetableHub(el) {
+  if (el) setActiveNavItem(el);
+  openModal('timetable-modal');
+  await loadTimetableSlots();
+}
+
+async function loadTimetableSlots() {
+  const listContainer = document.getElementById('timetable-slots-list');
+  if (listContainer) listContainer.innerHTML = `<div style="color:var(--text-muted); padding:1rem;">Loading timetable schedule...</div>`;
+
+  try {
+    const res = await fetch('/api/v1/timetable');
+    if (!res.ok) throw new Error("Failed to fetch timetable");
+    const data = await res.json();
+    cachedTimetableSlots = data.slots || [];
+
+    const urlInput = document.getElementById('cal-ics-url-input');
+    const statusText = document.getElementById('cal-sync-status-text');
+    if (data.calendar_config) {
+      if (urlInput && data.calendar_config.ics_url) urlInput.value = data.calendar_config.ics_url;
+      if (statusText && data.calendar_config.last_synced_at) {
+        statusText.textContent = `Last Synced: ${new Date(data.calendar_config.last_synced_at).toLocaleTimeString()}`;
+        statusText.style.color = "var(--status-green)";
+      }
+    }
+
+    renderTimetableSlots(cachedTimetableSlots, timetableDayFilter);
+    renderTimetableMatrix(cachedTimetableSlots);
+  } catch (err) {
+    console.error("Timetable load error:", err);
+  }
+}
+
+function filterTimetableDay(day, btnEl) {
+  timetableDayFilter = day;
+  document.querySelectorAll('.tt-day-pill').forEach(b => {
+    b.className = "btn btn-secondary tt-day-pill";
+  });
+  if (btnEl) btnEl.className = "btn btn-primary tt-day-pill";
+  renderTimetableSlots(cachedTimetableSlots, day);
+}
+
+function renderTimetableSlots(slots, dayFilter) {
+  const container = document.getElementById('timetable-slots-list');
+  if (!container) return;
+
+  let filtered = slots;
+  if (dayFilter !== 'All') {
+    filtered = slots.filter(s => s.day_of_week === dayFilter || s.day_of_week === 'Daily');
+  }
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<div style="color:var(--text-muted); font-size:0.85rem; padding:1.5rem; text-align:center; background:var(--bg-card); border-radius:var(--radius-sm);">No schedule slots found for ${dayFilter}. Add one below or sync your Google Calendar feed!</div>`;
+    return;
+  }
+
+  const categoryBadges = {
+    'Exam': 'badge-red-vivid',
+    'Assignment': 'badge-yellow-vivid',
+    'College': 'badge-indigo',
+    'DSA': 'badge-cyan',
+    'ML': 'badge-green',
+    'Break': 'badge-yellow'
+  };
+
+  container.innerHTML = filtered.map(s => {
+    const badgeClass = categoryBadges[s.category] || 'badge-indigo';
+    const isBlocked = s.is_blocked;
+    const isSynced = s.source === 'ical_sync' || s.source === 'google_cal';
+
+    return `
+      <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-card); border:1px solid var(--border-bright); border-radius:var(--radius-sm); padding:0.75rem 1rem;">
+        <div style="display:flex; align-items:center; gap:0.85rem;">
+          <div style="font-family:var(--font-mono); font-weight:700; font-size:0.88rem; color:var(--accent-cyan); min-width:90px;">
+            ${s.start_time} - ${s.end_time}
+          </div>
+          <div>
+            <div style="font-weight:700; font-size:0.95rem; color:var(--text-primary);">
+              ${s.title}
+              ${isBlocked ? '<span style="font-size:0.68rem; color:var(--status-yellow); margin-left:0.5rem; border:1px solid rgba(245,158,11,0.4); padding:0.1rem 0.4rem; border-radius:4px;">TIME BLOCKED</span>' : ''}
+              ${isSynced ? '<span style="font-size:0.68rem; color:var(--accent-indigo); margin-left:0.3rem;">🔗 SYNCED</span>' : ''}
+            </div>
+            <div style="font-size:0.78rem; color:var(--text-muted);">${s.day_of_week} ${s.date_str ? '(' + s.date_str + ')' : ''} • Spoken: "${s.spoken_announcement || s.title}"</div>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:0.5rem;">
+          <span class="badge ${badgeClass}">${s.category}</span>
+          <button class="btn btn-secondary" style="padding:0.2rem 0.5rem; font-size:0.75rem; color:var(--status-red);" onclick="deleteTimetableSlot(${s.id})">Delete</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function handleCreateTimetableSubmit(e) {
+  e.preventDefault();
+  const day_of_week = document.getElementById('tt-form-day').value;
+  const start_time = document.getElementById('tt-form-start').value;
+  const end_time = document.getElementById('tt-form-end').value;
+  const title = document.getElementById('tt-form-title').value.trim();
+  const category = document.getElementById('tt-form-cat').value;
+  const spoken_announcement = document.getElementById('tt-form-spoken').value.trim();
+  const is_blocked = document.getElementById('tt-form-blocked').checked;
+
+  if (!title) return;
+
+  const res = await fetch('/api/v1/timetable', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      day_of_week, start_time, end_time, title, category, spoken_announcement, is_blocked
+    })
+  });
+
+  if (res.ok) {
+    document.getElementById('tt-form-title').value = '';
+    document.getElementById('tt-form-spoken').value = '';
+    await loadTimetableSlots();
+    loadDashboardData();
+  } else {
+    alert("Failed to add timetable slot.");
+  }
+}
+
+async function deleteTimetableSlot(slotId) {
+  if (!confirm("Are you sure you want to delete this schedule slot?")) return;
+  const res = await fetch(`/api/v1/timetable/${slotId}`, {method: 'DELETE'});
+  if (res.ok) {
+    await loadTimetableSlots();
+    loadDashboardData();
+  }
+}
+
+async function handleCalendarSyncSubmit(e) {
+  e.preventDefault();
+  const url = document.getElementById('cal-ics-url-input').value.trim();
+  if (!url) return;
+
+  const statusText = document.getElementById('cal-sync-status-text');
+  if (statusText) statusText.textContent = "Syncing...";
+
+  try {
+    const res = await fetch('/api/v1/calendar/sync', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ics_url: url})
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      alert(`Calendar Synced Successfully!\n${data.events_synced} event(s) imported and time-blocked.`);
+      await loadTimetableSlots();
+      loadDashboardData();
+    } else {
+      alert("Calendar Sync Error: " + (data.message || "Failed to fetch calendar"));
+    }
+  } catch (err) {
+    alert("Failed to sync calendar feed.");
+  }
+}
+
+// ==========================================
+// WEEKLY TABULAR MATRIX EDITOR FUNCTIONS
+// ==========================================
+
+function switchTimetableTab(tab) {
+  const matrixTab = document.getElementById('timetable-tab-matrix');
+  const listTab = document.getElementById('timetable-tab-list');
+  const matrixBtn = document.getElementById('tt-tab-matrix-btn');
+  const listBtn = document.getElementById('tt-tab-list-btn');
+
+  if (tab === 'matrix') {
+    if (matrixTab) matrixTab.style.display = 'block';
+    if (listTab) listTab.style.display = 'none';
+    if (matrixBtn) matrixBtn.className = "btn btn-primary";
+    if (listBtn) listBtn.className = "btn btn-secondary";
+  } else {
+    if (matrixTab) matrixTab.style.display = 'none';
+    if (listTab) listTab.style.display = 'block';
+    if (matrixBtn) matrixBtn.className = "btn btn-secondary";
+    if (listBtn) listBtn.className = "btn btn-primary";
+  }
+}
+
+function renderTimetableMatrix(slots) {
+  const tbody = document.getElementById('timetable-matrix-tbody');
+  if (!tbody) return;
+
+  const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  
+  let standardTimes = [];
+  slots.forEach(s => {
+    if (s.start_time && s.end_time) {
+      const timeStr = `${s.start_time}-${s.end_time}`;
+      if (!standardTimes.includes(timeStr)) {
+        standardTimes.push(timeStr);
+      }
+    }
+  });
+
+  if (standardTimes.length === 0) {
+    standardTimes = [
+      "09:00-10:00", "10:00-11:00", "11:00-12:00", 
+      "12:00-13:00", "13:00-14:00", "14:00-15:00", "15:00-16:00", "16:00-17:00"
+    ];
+  } else {
+    standardTimes.sort((a, b) => a.localeCompare(b));
+  }
+
+  let rowsHtml = "";
+
+  standardTimes.forEach((timeRange) => {
+    rowsHtml += `
+      <tr style="border-bottom:1px solid var(--border-subtle);">
+        <td style="padding:0.5rem; background:var(--bg-surface); font-family:var(--font-mono); font-weight:700; font-size:0.78rem; color:var(--accent-cyan);">
+          <input type="text" class="matrix-time-input" value="${timeRange}" style="width:95px; background:var(--bg-card); border:1px solid var(--border-subtle); color:var(--accent-cyan); padding:0.2rem 0.4rem; border-radius:4px; font-weight:700; font-size:0.75rem;">
+        </td>
+    `;
+
+    days.forEach(day => {
+      const match = slots.find(s => 
+        (s.day_of_week === day || s.day_of_week === 'Daily') && 
+        `${s.start_time}-${s.end_time}` === timeRange
+      );
+
+      const slotId = match ? match.id : '';
+      const title = match ? match.title : '';
+      const category = match ? match.category : 'College';
+      const isBlocked = match ? match.is_blocked : true;
+
+      const catColors = {
+        'College': '#6366F1',
+        'Exam': '#EF4444',
+        'Assignment': '#F59E0B',
+        'DSA': '#06B6D4',
+        'ML': '#10B981',
+        'Break': '#EAB308'
+      };
+      const borderColor = match ? (catColors[category] || '#6366F1') : 'var(--border-subtle)';
+
+      rowsHtml += `
+        <td style="padding:0.4rem; border-left:1px solid var(--border-subtle); position:relative;">
+          <div style="display:flex; flex-direction:column; gap:0.25rem;">
+            <input type="text" class="matrix-cell-title" data-slot-id="${slotId}" data-day="${day}" data-time="${timeRange}" value="${title}" title="${title}" placeholder="+ Add Activity" style="width:100%; background:var(--bg-card); border:1px solid ${borderColor}; color:var(--text-primary); padding:0.3rem 0.45rem; border-radius:4px; font-size:0.78rem; text-overflow:ellipsis; white-space:nowrap; overflow:hidden;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <select class="matrix-cell-cat" style="background:var(--bg-surface); border:1px solid var(--border-subtle); color:var(--text-secondary); font-size:0.68rem; padding:0.1rem 0.2rem; border-radius:3px;">
+                <option value="College" ${category==='College'?'selected':''}>🎓 Col</option>
+                <option value="Exam" ${category==='Exam'?'selected':''}>🎓 Exam</option>
+                <option value="Assignment" ${category==='Assignment'?'selected':''}>📝 Assg</option>
+                <option value="DSA" ${category==='DSA'?'selected':''}>&lt;/&gt; DSA</option>
+                <option value="ML" ${category==='ML'?'selected':''}>🧠 ML</option>
+                <option value="Break" ${category==='Break'?'selected':''}>☕ Break</option>
+              </select>
+              <label style="font-size:0.65rem; color:var(--text-muted); cursor:pointer; display:flex; align-items:center; gap:0.15rem;" title="Block this time window">
+                <input type="checkbox" class="matrix-cell-block" ${isBlocked?'checked':''} style="accent-color:var(--accent-indigo);"> 🔒 Block
+              </label>
+            </div>
+          </div>
+        </td>
+      `;
+    });
+
+    rowsHtml += `</tr>`;
+  });
+
+  tbody.innerHTML = rowsHtml;
+}
+
+function addMatrixTimeRow() {
+  const tbody = document.getElementById('timetable-matrix-tbody');
+  if (!tbody) return;
+
+  const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  const newRow = document.createElement('tr');
+  newRow.style.borderBottom = '1px solid var(--border-subtle)';
+
+  let rowContent = `
+    <td style="padding:0.5rem; background:var(--bg-surface); font-family:var(--font-mono); font-weight:700;">
+      <input type="text" class="matrix-time-input" value="18:00-19:00" style="width:90px; background:var(--bg-card); border:1px solid var(--border-subtle); color:var(--accent-cyan); padding:0.2rem 0.4rem; border-radius:4px; font-weight:700; font-size:0.75rem;">
+    </td>
+  `;
+
+  days.forEach(day => {
+    rowContent += `
+      <td style="padding:0.4rem; border-left:1px solid var(--border-subtle);">
+        <div style="display:flex; flex-direction:column; gap:0.25rem;">
+          <input type="text" class="matrix-cell-title" data-slot-id="" data-day="${day}" data-time="18:00-19:00" value="" placeholder="+ Add Activity" style="width:100%; background:var(--bg-card); border:1px solid var(--border-subtle); color:var(--text-primary); padding:0.3rem 0.45rem; border-radius:4px; font-size:0.78rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <select class="matrix-cell-cat" style="background:var(--bg-surface); border:1px solid var(--border-subtle); color:var(--text-secondary); font-size:0.68rem; padding:0.1rem 0.2rem; border-radius:3px;">
+              <option value="College">🎓 Col</option>
+              <option value="Exam">🎓 Exam</option>
+              <option value="Assignment">📝 Assg</option>
+              <option value="DSA">&lt;/&gt; DSA</option>
+              <option value="ML">🧠 ML</option>
+              <option value="Break">☕ Break</option>
+            </select>
+            <label style="font-size:0.65rem; color:var(--text-muted); cursor:pointer; display:flex; align-items:center; gap:0.15rem;">
+              <input type="checkbox" class="matrix-cell-block" checked style="accent-color:var(--accent-indigo);"> 🔒 Block
+            </label>
+          </div>
+        </div>
+      </td>
+    `;
+  });
+
+  newRow.innerHTML = rowContent;
+  tbody.appendChild(newRow);
+}
+
+async function saveMatrixTimetable() {
+  const tbody = document.getElementById('timetable-matrix-tbody');
+  if (!tbody) return;
+
+  const rows = tbody.querySelectorAll('tr');
+  let saveCount = 0;
+
+  for (const row of rows) {
+    const timeInput = row.querySelector('.matrix-time-input');
+    if (!timeInput) continue;
+    const timeRange = timeInput.value.trim();
+    let [startTime, endTime] = timeRange.split('-');
+    if (!startTime) startTime = "09:00";
+    if (!endTime) endTime = "10:00";
+    startTime = startTime.trim();
+    endTime = endTime.trim();
+
+    const cells = row.querySelectorAll('td');
+    for (let i = 1; i < cells.length; i++) {
+      const cell = cells[i];
+      const titleInput = cell.querySelector('.matrix-cell-title');
+      const catSelect = cell.querySelector('.matrix-cell-cat');
+      const blockCheck = cell.querySelector('.matrix-cell-block');
+
+      if (!titleInput) continue;
+
+      const title = titleInput.value.trim();
+      const slotId = titleInput.getAttribute('data-slot-id');
+      const day = titleInput.getAttribute('data-day');
+      const category = catSelect ? catSelect.value : 'College';
+      const isBlocked = blockCheck ? blockCheck.checked : true;
+
+      if (title && !slotId) {
+        await fetch('/api/v1/timetable', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            day_of_week: day,
+            start_time: startTime,
+            end_time: endTime,
+            title: title,
+            category: category,
+            spoken_announcement: `Attention! ${title} is starting now at ${startTime}.`,
+            is_blocked: isBlocked
+          })
+        });
+        saveCount++;
+      } else if (title && slotId) {
+        await fetch(`/api/v1/timetable/${slotId}`, {
+          method: 'PUT',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            title: title,
+            day_of_week: day,
+            start_time: startTime,
+            end_time: endTime,
+            category: category,
+            is_blocked: isBlocked
+          })
+        });
+        saveCount++;
+      } else if (!title && slotId) {
+        await fetch(`/api/v1/timetable/${slotId}`, {method: 'DELETE'});
+      }
+    }
+  }
+
+  alert("Weekly Timetable saved successfully!");
+  await loadTimetableSlots();
+  loadDashboardData();
 }

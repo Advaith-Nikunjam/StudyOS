@@ -306,12 +306,38 @@
           ACTIVE ASSIGNMENTS & URGENT ALERTS
         </div>
 
-        <div id="wall-urgent-container" style="width:100%; display:flex; flex-direction:column; align-items:center; gap:1rem;">
+        <div id="wall-urgent-container" style="width:100%; display:flex; flex-direction:column; align-items:center; gap:1rem; padding-bottom:2rem;">
           <!-- Dynamically Populated by wall.js -->
         </div>
 
         <div style="margin-top:2rem; font-size:0.85rem; color:var(--text-secondary); display:flex; align-items:center; gap:0.5rem;">
           <span>🛡️</span> "Don't delay. Small actions today prevent big pressure tomorrow."
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 5 — TIMETABLE & SCHEDULE -->
+    <div id="screen-5" class="wall-screen" style="display:none;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <div class="wall-title-huge" style="margin:0; color:var(--accent-cyan);">TIMETABLE & DAILY SCHEDULE</div>
+        <div style="display:flex; align-items:center; gap:0.75rem;">
+          <button id="wall-voice-btn" class="btn btn-secondary" style="font-size:0.8rem; padding:0.25rem 0.65rem; border-color:var(--accent-indigo); color:#A5B4FC;" onclick="toggleWallVoice()">🔊 Voice Alerts: ON</button>
+          <span class="badge badge-cyan" id="wall-timetable-day-badge">TODAY'S SCHEDULE</span>
+        </div>
+      </div>
+
+      <!-- Real-Time Voice Toast Banner -->
+      <div id="wall-announcement-toast" style="display:none; background:linear-gradient(135deg, rgba(99,102,241,0.25), rgba(139,92,246,0.25)); border:2px solid var(--accent-indigo); border-radius:var(--radius-md); padding:0.85rem 1.25rem; margin-bottom:1rem; align-items:center; gap:1rem; box-shadow:0 0 20px rgba(99,102,241,0.35);">
+        <span style="font-size:1.8rem;">🔊</span>
+        <div>
+          <div style="font-size:0.75rem; font-weight:700; color:var(--accent-indigo); text-transform:uppercase;">VOICE ANNOUNCEMENT ACTIVE</div>
+          <div id="wall-toast-text" style="font-size:1.1rem; font-weight:700; color:#F8FAFC;">Schedule Event starting...</div>
+        </div>
+      </div>
+
+      <div style="background:var(--bg-card); border:1px solid var(--border-bright); border-radius:var(--radius-lg); padding:1.5rem 2rem; flex:1; min-height:0; display:flex; flex-direction:column; overflow-y:auto;">
+        <div id="wall-timetable-container" style="display:flex; flex-direction:column; gap:0.85rem; width:100%;">
+          <!-- Dynamically Populated by wall.js -->
         </div>
       </div>
     </div>
@@ -326,6 +352,7 @@
     <div id="pill-2" class="screen-pill" onclick="setScreen(2)">2. JOURNEY</div>
     <div id="pill-3" class="screen-pill" onclick="setScreen(3)">3. REVISION</div>
     <div id="pill-4" class="screen-pill" style="display:none;" onclick="setScreen(4)">4. URGENT</div>
+    <div id="pill-5" class="screen-pill" onclick="setScreen(5)">5. TIMETABLE</div>
 
     <button id="nav-btn-next" class="btn btn-secondary" onclick="nextScreen()">›</button>
 

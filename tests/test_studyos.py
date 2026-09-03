@@ -774,5 +774,59 @@ async def test_41_sentinelai_application_does_not_duplicate_learning_task():
         # Must focus on building/inspecting/applying
         assert "Inspect" in sen_task["title"] or "Apply" in sen_task["title"] or "Build" in sen_task["title"]
 
+def test_timetable_crud_endpoints():
+    """Test Timetable CRUD REST API endpoints."""
+    # 1. Create slot
+    res = client.post("/api/v1/timetable", json={
+        "day_of_week": "Monday",
+        "start_time": "09:00",
+        "end_time": "11:00",
+        "title": "DAA Midterm Exam",
+        "category": "Exam",
+        "spoken_announcement": "Attention! DAA Midterm Exam starts now at 9:00 AM.",
+        "is_blocked": True
+    })
+    assert res.status_code == 200
+    slot_id = res.json()["id"]
+    
+    # 2. Get slots
+    get_res = client.get("/api/v1/timetable")
+    assert get_res.status_code == 200
+    data = get_res.json()
+    assert "slots" in data
+    titles = [s["title"] for s in data["slots"]]
+    assert "DAA Midterm Exam" in titles
+    
+    # 3. Update slot
+    put_res = client.put(f"/api/v1/timetable/{slot_id}", json={"title": "DAA Final Exam"})
+    assert put_res.status_code == 200
+    
+    # 4. Delete slot
+    del_res = client.delete(f"/api/v1/timetable/{slot_id}")
+    assert del_res.status_code == 200
 
+def test_calendar_ics_import_and_time_blocking():
+    """Test iCal (.ics) format VEVENT parsing and automatic schedule time-blocking."""
+    sample_ics = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Google Inc//Google Calendar 70.9054//EN
+BEGIN:VEVENT
+UID:daa_test_123@google.com
+SUMMARY:DAA Lab Examination
+DTSTART:20260910T100000Z
+DTEND:20260910T120000Z
+DESCRIPTION:DAA Lab Exam in Lab 4
+END:VEVENT
+END:VCALENDAR"""
 
+    res = client.post("/api/v1/calendar/import", json={"ics_content": sample_ics})
+    assert res.status_code == 200
+    data = res.json()
+    assert data["events_imported"] >= 1
+    
+    # Check timetable slots
+    tt_res = client.get("/api/v1/timetable")
+    assert tt_res.status_code == 200
+    slots = tt_res.json()["slots"]
+    imp_titles = [s["title"] for s in slots]
+    assert "DAA Lab Examination" in imp_titles
