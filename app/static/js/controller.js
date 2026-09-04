@@ -7,6 +7,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const dateInput = document.getElementById('sprint-start-date-input');
   if (dateInput) dateInput.value = todayStr;
 
+  const restartDateInput = document.getElementById('restart-sprint-date-input');
+  if (restartDateInput) restartDateInput.value = todayStr;
+
   const atmDueDate = document.getElementById('atm-due-date');
   if (atmDueDate) atmDueDate.value = todayStr;
 
@@ -742,6 +745,37 @@ async function handleStartSprintSubmit(e) {
   loadDashboardData();
 }
 
+function openRestartSprintModal() {
+  closeModal('settings-modal');
+  const dateInput = document.getElementById('restart-sprint-date-input');
+  if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
+  openModal('restart-sprint-modal');
+}
+
+async function handleRestartSprintSubmit(e) {
+  e.preventDefault();
+  const startDateStr = document.getElementById('restart-sprint-date-input').value;
+  if (!startDateStr) return;
+  
+  if (!confirm(`Are you sure you want to RESTART your 120-Day Sprint starting on ${startDateStr}? This will reset your timeline to Day 01.`)) return;
+
+  const res = await fetch('/api/v1/sprint/restart', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({start_date: startDateStr})
+  });
+  
+  const data = await res.json();
+  if (!res.ok) {
+    alert(`Error restarting sprint: ${data.detail || data.message}`);
+    return;
+  }
+  
+  alert(`${data.message}\nNew Start Date (Day 01): ${data.actual_start_date}\nNew End Date (120 Days): ${data.actual_end_date}`);
+  closeModal('restart-sprint-modal');
+  loadDashboardData();
+}
+
 async function resetTestData() {
   if (!confirm("Are you sure you want to reset all TEST data and test report files? Real data will remain untouched.")) return;
   const res = await fetch('/api/v1/test/reset', {method: 'POST'});
@@ -1120,6 +1154,46 @@ function switchTimetableTab(tab) {
   }
 }
 
+function clearMatrixCell(btnEl) {
+  const container = btnEl.closest('td');
+  if (!container) return;
+  const input = container.querySelector('.matrix-cell-title');
+  if (input) {
+    input.value = '';
+    input.style.borderColor = 'var(--border-subtle)';
+  }
+}
+
+async function deleteMatrixRow(btnEl) {
+  const tr = btnEl.closest('tr');
+  if (!tr) return;
+
+  const titleInputs = tr.querySelectorAll('.matrix-cell-title');
+  const slotIds = [];
+  titleInputs.forEach(input => {
+    const slotId = input.getAttribute('data-slot-id');
+    if (slotId) slotIds.push(slotId);
+  });
+
+  const confirmMsg = slotIds.length > 0
+    ? `Delete this entire time row and remove ${slotIds.length} scheduled slot(s) from your timetable?`
+    : `Delete this time row?`;
+
+  if (!confirm(confirmMsg)) return;
+
+  for (const slotId of slotIds) {
+    try {
+      await fetch(`/api/v1/timetable/${slotId}`, { method: 'DELETE' });
+    } catch (err) {
+      console.warn(`Failed to delete slot ${slotId}:`, err);
+    }
+  }
+
+  tr.remove();
+  await loadTimetableSlots();
+  loadDashboardData();
+}
+
 function renderTimetableMatrix(slots) {
   const tbody = document.getElementById('timetable-matrix-tbody');
   if (!tbody) return;
@@ -1150,8 +1224,11 @@ function renderTimetableMatrix(slots) {
   standardTimes.forEach((timeRange) => {
     rowsHtml += `
       <tr style="border-bottom:1px solid var(--border-subtle);">
-        <td style="padding:0.5rem; background:var(--bg-surface); font-family:var(--font-mono); font-weight:700; font-size:0.78rem; color:var(--accent-cyan);">
-          <input type="text" class="matrix-time-input" value="${timeRange}" style="width:95px; background:var(--bg-card); border:1px solid var(--border-subtle); color:var(--accent-cyan); padding:0.2rem 0.4rem; border-radius:4px; font-weight:700; font-size:0.75rem;">
+        <td style="padding:0.4rem; background:var(--bg-surface); font-family:var(--font-mono); font-weight:700; font-size:0.78rem; color:var(--accent-cyan);">
+          <div style="display:flex; align-items:center; gap:0.25rem;">
+            <input type="text" class="matrix-time-input" value="${timeRange}" style="width:82px; background:var(--bg-card); border:1px solid var(--border-subtle); color:var(--accent-cyan); padding:0.2rem 0.3rem; border-radius:4px; font-weight:700; font-size:0.72rem;" placeholder="HH:MM-HH:MM">
+            <button type="button" class="btn btn-secondary" style="padding:0.15rem 0.35rem; font-size:0.7rem; color:var(--status-red); border-color:rgba(239,68,68,0.4);" onclick="deleteMatrixRow(this)" title="Delete entire time row">🗑️</button>
+          </div>
         </td>
     `;
 
@@ -1179,7 +1256,10 @@ function renderTimetableMatrix(slots) {
       rowsHtml += `
         <td style="padding:0.4rem; border-left:1px solid var(--border-subtle); position:relative;">
           <div style="display:flex; flex-direction:column; gap:0.25rem;">
-            <input type="text" class="matrix-cell-title" data-slot-id="${slotId}" data-day="${day}" data-time="${timeRange}" value="${title}" title="${title}" placeholder="+ Add Activity" style="width:100%; background:var(--bg-card); border:1px solid ${borderColor}; color:var(--text-primary); padding:0.3rem 0.45rem; border-radius:4px; font-size:0.78rem; text-overflow:ellipsis; white-space:nowrap; overflow:hidden;">
+            <div style="display:flex; align-items:center; gap:0.2rem;">
+              <input type="text" class="matrix-cell-title" data-slot-id="${slotId}" data-day="${day}" data-time="${timeRange}" value="${title}" title="${title}" placeholder="+ Add Activity" style="width:100%; background:var(--bg-card); border:1px solid ${borderColor}; color:var(--text-primary); padding:0.3rem 0.45rem; border-radius:4px; font-size:0.78rem; text-overflow:ellipsis; white-space:nowrap; overflow:hidden;">
+              <button type="button" onclick="clearMatrixCell(this)" style="background:none; border:none; color:var(--status-red); cursor:pointer; font-size:0.75rem; padding:0 0.15rem;" title="Clear this activity">✕</button>
+            </div>
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <select class="matrix-cell-cat" style="background:var(--bg-surface); border:1px solid var(--border-subtle); color:var(--text-secondary); font-size:0.68rem; padding:0.1rem 0.2rem; border-radius:3px;">
                 <option value="College" ${category==='College'?'selected':''}>🎓 Col</option>
@@ -1213,8 +1293,11 @@ function addMatrixTimeRow() {
   newRow.style.borderBottom = '1px solid var(--border-subtle)';
 
   let rowContent = `
-    <td style="padding:0.5rem; background:var(--bg-surface); font-family:var(--font-mono); font-weight:700;">
-      <input type="text" class="matrix-time-input" value="18:00-19:00" style="width:90px; background:var(--bg-card); border:1px solid var(--border-subtle); color:var(--accent-cyan); padding:0.2rem 0.4rem; border-radius:4px; font-weight:700; font-size:0.75rem;">
+    <td style="padding:0.4rem; background:var(--bg-surface); font-family:var(--font-mono); font-weight:700;">
+      <div style="display:flex; align-items:center; gap:0.25rem;">
+        <input type="text" class="matrix-time-input" value="18:00-19:00" style="width:82px; background:var(--bg-card); border:1px solid var(--border-subtle); color:var(--accent-cyan); padding:0.2rem 0.3rem; border-radius:4px; font-weight:700; font-size:0.72rem;" placeholder="HH:MM-HH:MM">
+        <button type="button" class="btn btn-secondary" style="padding:0.15rem 0.35rem; font-size:0.7rem; color:var(--status-red); border-color:rgba(239,68,68,0.4);" onclick="deleteMatrixRow(this)" title="Delete entire time row">🗑️</button>
+      </div>
     </td>
   `;
 
@@ -1222,7 +1305,10 @@ function addMatrixTimeRow() {
     rowContent += `
       <td style="padding:0.4rem; border-left:1px solid var(--border-subtle);">
         <div style="display:flex; flex-direction:column; gap:0.25rem;">
-          <input type="text" class="matrix-cell-title" data-slot-id="" data-day="${day}" data-time="18:00-19:00" value="" placeholder="+ Add Activity" style="width:100%; background:var(--bg-card); border:1px solid var(--border-subtle); color:var(--text-primary); padding:0.3rem 0.45rem; border-radius:4px; font-size:0.78rem;">
+          <div style="display:flex; align-items:center; gap:0.2rem;">
+            <input type="text" class="matrix-cell-title" data-slot-id="" data-day="${day}" data-time="18:00-19:00" value="" placeholder="+ Add Activity" style="width:100%; background:var(--bg-card); border:1px solid var(--border-subtle); color:var(--text-primary); padding:0.3rem 0.45rem; border-radius:4px; font-size:0.78rem;">
+            <button type="button" onclick="clearMatrixCell(this)" style="background:none; border:none; color:var(--status-red); cursor:pointer; font-size:0.75rem; padding:0 0.15rem;" title="Clear this activity">✕</button>
+          </div>
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <select class="matrix-cell-cat" style="background:var(--bg-surface); border:1px solid var(--border-subtle); color:var(--text-secondary); font-size:0.68rem; padding:0.1rem 0.2rem; border-radius:3px;">
               <option value="College">🎓 Col</option>

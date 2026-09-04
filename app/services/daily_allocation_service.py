@@ -5,7 +5,7 @@ from sqlalchemy import select, and_
 
 from app.db.models import (
     SprintConfig, RoadmapWeek, Task, DSALog, Concept, 
-    SentinelAIMilestone, CollegeEvent, SpacedRevision, TimetableSlot
+    SentinelAIMilestone, CollegeEvent, SpacedRevision, TimetableSlot, DayLog
 )
 from app.services.revision_service import SpacedRevisionService
 from app.services.recovery_service import RecoveryService
@@ -513,3 +513,81 @@ class DailyAllocationService:
             "unscheduled_rest_mins": max(0, MAX_SCHEDULED_MINS - total_mins),
             "capacity_risk_warning": capacity_risk_warning
         }
+
+    @staticmethod
+    async def ensure_today_tasks_exist(
+        session,
+        mode: str = "REAL",
+        target_date_str: Optional[str] = None
+    ) -> List[Task]:
+        """
+        Auto-materializes daily allocation tasks into the database `Task` table for target_date_str
+        if the sprint is active and no tasks currently exist for today.
+        Also seeds initial DayLog and SpacedRevision items if needed.
+        """
+        today_str = target_date_str or date.today().isoformat()
+
+        cfg_res = await session.execute(select(SprintConfig))
+        config = cfg_res.scalar_one_or_none()
+        if not config or not config.sprint_activated:
+            return []
+
+        # Check existing tasks for today
+        existing_res = await session.execute(
+            select(Task).where(Task.due_date == today_str)
+        )
+        existing_tasks = existing_res.scalars().all()
+        if len(existing_tasks) > 0:
+            return existing_tasks
+
+        # Calculate daily allocation
+        allocation = await DailyAllocationService.get_daily_allocation(session, mode=mode, custom_date_str=today_str)
+        scheduled_tasks = allocation.get("tasks", [])
+
+        created_tasks = []
+        for st in scheduled_tasks:
+            task = Task(
+                title=st["title"],
+                category=st.get("category", "General"),
+                priority=st.get("priority", "medium"),
+                status="planned",
+                due_date=today_str,
+                estimated_minutes=st.get("estimated_minutes", 45),
+                notes=f"Sprint Day {allocation['current_day']} Allocated Task"
+            )
+            session.add(task)
+            created_tasks.append(task)
+
+        # Ensure DayLog exists for today with Must Win text
+        day_res = await session.execute(select(DayLog).where(DayLog.date == today_str))
+        day_log = day_res.scalar_one_or_none()
+        if not day_log:
+            focus = allocation.get("focus_dsa", "DSA Patterns").split(",")[0].strip()
+            must_win = f"Master {focus} & complete Day {allocation['current_day']} SentinelAI task"
+            day_log = DayLog(
+                date=today_str,
+                day_number=allocation["current_day"],
+                available_hours=4.0,
+                must_win_text=must_win,
+                status="active"
+            )
+            session.add(day_log)
+
+        # Seed initial Spaced Revision items for foundational concepts if queue is empty
+        rev_count_res = await session.execute(select(SpacedRevision))
+        if len(rev_count_res.scalars().all()) == 0:
+            foundational_concepts = [
+                ("Hashing Basics", "DSA"),
+                ("Big-O Notation", "DSA"),
+                ("Python Lists & Arrays", "DSA"),
+                ("NumPy & Pandas Foundations", "ML"),
+                ("Stacks & Queues", "DSA")
+            ]
+            for concept_name, domain in foundational_concepts:
+                await SpacedRevisionService.create_schedule_for_concept(
+                    session, concept_name=concept_name, domain=domain, start_date_str=today_str
+                )
+
+        await session.commit()
+        return created_tasks
+

@@ -50,6 +50,7 @@ async def get_display_state(db: AsyncSession = Depends(get_db)):
     Returns lightweight, distance-viewable payload for 4-screen rotation engine.
     Now includes Today's Must Win, Spaced Revisions, Weakness Radar, & Recovery status.
     """
+    await DailyAllocationService.ensure_today_tasks_exist(db)
     sprint_status = await RoadmapService.get_sprint_status(db)
     today_str = date.today().isoformat()
     
@@ -198,6 +199,7 @@ async def get_display_state(db: AsyncSession = Depends(get_db)):
 @router.get("/api/v1/dashboard")
 async def get_controller_dashboard(db: AsyncSession = Depends(get_db)):
     """Full data payload for Main Controller interface."""
+    await DailyAllocationService.ensure_today_tasks_exist(db)
     sprint_status = await RoadmapService.get_sprint_status(db)
     today_str = date.today().isoformat()
     
@@ -461,13 +463,58 @@ async def activate_sprint(
     cfg.activated_at = datetime.now(timezone.utc)
     
     await db.commit()
+    created_tasks = await DailyAllocationService.ensure_today_tasks_exist(db, mode=cfg.env_mode, target_date_str=start_date_str)
     
     return {
         "message": "🎉 120-DAY SPRINT ACTIVATED SUCCESSFULLY!",
         "sprint_activated": True,
         "actual_start_date": start_date_str,
         "actual_end_date": end_date_str,
-        "activated_at": cfg.activated_at.isoformat()
+        "activated_at": cfg.activated_at.isoformat(),
+        "created_tasks_count": len(created_tasks)
+    }
+
+@router.post("/api/v1/sprint/restart")
+async def restart_sprint(
+    body: Dict[str, Any] = Body(...),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    RESTART 120-DAY SPRINT ENDPOINT (BACKUP).
+    Allows resetting and restarting the 120-day sprint cycle from Day 01.
+    Recalculates actual_start_date and actual_end_date.
+    """
+    cfg_res = await db.execute(select(SprintConfig))
+    cfg = cfg_res.scalar_one_or_none()
+    
+    if not cfg:
+        cfg = SprintConfig(env_mode=get_current_env_mode())
+        db.add(cfg)
+        
+    start_date_str = body.get("start_date", date.today().isoformat())
+    try:
+        start_dt = datetime.strptime(start_date_str, "%Y-%m-%d").date()
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid start_date format. Expected YYYY-MM-DD.")
+        
+    end_dt = start_dt + timedelta(days=119)
+    end_date_str = end_dt.isoformat()
+    
+    cfg.sprint_activated = True
+    cfg.actual_start_date = start_date_str
+    cfg.actual_end_date = end_date_str
+    cfg.activated_at = datetime.now(timezone.utc)
+    
+    await db.commit()
+    created_tasks = await DailyAllocationService.ensure_today_tasks_exist(db, mode=cfg.env_mode, target_date_str=start_date_str)
+    
+    return {
+        "message": "🔄 120-DAY SPRINT RESTARTED SUCCESSFULLY!",
+        "sprint_activated": True,
+        "actual_start_date": start_date_str,
+        "actual_end_date": end_date_str,
+        "activated_at": cfg.activated_at.isoformat(),
+        "created_tasks_count": len(created_tasks)
     }
 
 @router.post("/api/v1/env/switch")
@@ -991,3 +1038,21 @@ async def system_speak_announcement(body: Dict[str, Any] = Body(...)):
         print("System speech exception:", e)
         
     return {"status": "client_speech_only"}
+
+@router.post("/api/v1/wall/sleep")
+async def toggle_wall_sleep(
+    body: Dict[str, Any] = Body(...),
+    db: AsyncSession = Depends(get_db)
+):
+    """Toggles or sets wall_sleep_mode state in SprintConfig."""
+    cfg_res = await db.execute(select(SprintConfig))
+    cfg = cfg_res.scalar_one_or_none()
+    if not cfg:
+        cfg = SprintConfig(env_mode=get_current_env_mode())
+        db.add(cfg)
+        
+    sleep_state = body.get("sleep", not cfg.wall_sleep_mode)
+    cfg.wall_sleep_mode = sleep_state
+    await db.commit()
+    return {"message": f"Wall Sleep Mode set to {sleep_state}", "wall_sleep_mode": cfg.wall_sleep_mode}
+

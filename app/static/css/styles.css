@@ -870,22 +870,295 @@ body.wall-body {
   box-shadow: 0 0 14px rgba(99, 102, 241, 0.45);
 }
 
-/* Offline Banner & Screensaver */
+/* Bedtime Sleep Clock Styling */
 .screensaver-layer {
   position: fixed;
   top: 0; left: 0; width: 100vw; height: 100vh;
-  background: #020408;
+  background: #000000; /* ALWAYS 100% Solid OLED Black — no light bleed */
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   z-index: 9999;
+  user-select: none;
+  overflow: hidden;
 }
 
-.screensaver-clock {
+/* WOW-FACTOR Ambient Rotating Aurora Rings */
+.bedtime-aurora-ring-1 {
+  position: absolute;
+  width: 750px;
+  height: 750px;
+  border-radius: 43%;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.22) 0%, rgba(56, 189, 248, 0.08) 50%, transparent 70%);
+  filter: blur(40px);
+  pointer-events: none;
+  animation: spinClockwise 28s linear infinite, ambientPulse 8s ease-in-out infinite alternate;
+}
+
+.bedtime-aurora-ring-2 {
+  position: absolute;
+  width: 680px;
+  height: 680px;
+  border-radius: 48%;
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.18) 0%, rgba(236, 72, 153, 0.06) 55%, transparent 75%);
+  filter: blur(50px);
+  pointer-events: none;
+  animation: spinCounter 38s linear infinite, ambientPulse 10s ease-in-out infinite alternate;
+}
+
+.bedtime-star-dust {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    radial-gradient(2px 2px at 20px 30px, rgba(255, 255, 255, 0.4), rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 150px 150px, rgba(167, 139, 250, 0.5), rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 300px 80px, rgba(56, 189, 248, 0.4), rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 450px 320px, rgba(244, 114, 182, 0.3), rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 600px 200px, rgba(255, 255, 255, 0.5), rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 750px 400px, rgba(99, 102, 241, 0.4), rgba(0,0,0,0));
+  background-size: 800px 600px;
+  opacity: 0.6;
+  pointer-events: none;
+  animation: starlightFloat 20s ease-in-out infinite alternate;
+}
+
+@keyframes spinClockwise {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes spinCounter {
+  0% { transform: rotate(360deg); }
+  100% { transform: rotate(0deg); }
+}
+
+@keyframes starlightFloat {
+  0% { transform: translateY(0px) scale(1); opacity: 0.5; }
+  50% { transform: translateY(-15px) scale(1.05); opacity: 0.8; }
+  100% { transform: translateY(0px) scale(1); opacity: 0.5; }
+}
+
+/* Ambient breathing aura behind the clock */
+.bedtime-ambient-glow {
+  position: absolute;
+  width: 650px;
+  height: 650px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.18) 0%, rgba(56, 189, 248, 0.08) 45%, rgba(0, 0, 0, 0) 70%);
+  pointer-events: none;
+  animation: ambientPulse 8s ease-in-out infinite alternate;
+}
+
+@keyframes ambientPulse {
+  0% { transform: scale(0.9); opacity: 0.6; }
+  50% { transform: scale(1.15); opacity: 0.95; }
+  100% { transform: scale(0.95); opacity: 0.7; }
+}
+
+@keyframes clockFloat {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes colonBlink {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.2; transform: scale(0.95); }
+}
+
+@keyframes neonColorBreath {
+  0% {
+    color: #38BDF8;
+    text-shadow: 0 0 45px rgba(56, 189, 248, 0.6), 0 0 90px rgba(56, 189, 248, 0.25);
+  }
+  50% {
+    color: #A78BFA;
+    text-shadow: 0 0 50px rgba(167, 139, 250, 0.65), 0 0 100px rgba(167, 139, 250, 0.3);
+  }
+  100% {
+    color: #38BDF8;
+    text-shadow: 0 0 45px rgba(56, 189, 248, 0.6), 0 0 90px rgba(56, 189, 248, 0.25);
+  }
+}
+
+.bedtime-clock-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 850px;
+  padding: 2.5rem 3rem;
+  background: rgba(10, 15, 29, 0.7);
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  border-radius: 28px;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.95), 0 0 50px rgba(99, 102, 241, 0.18);
+  backdrop-filter: blur(25px);
+  position: relative;
+  z-index: 2;
+  animation: clockFloat 7s ease-in-out infinite;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.bedtime-clock-time-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 1.2rem 0;
+}
+
+.bedtime-time-digits {
   font-family: var(--font-mono);
-  font-size: 4rem;
-  color: #334155;
+  font-size: 7.8rem;
+  font-weight: 800;
+  color: #38BDF8;
+  text-shadow: 0 0 45px rgba(56, 189, 248, 0.6), 0 0 90px rgba(56, 189, 248, 0.25);
+  line-height: 1;
+  letter-spacing: 2px;
+  animation: neonColorBreath 14s ease-in-out infinite;
+  transition: all 0.4s ease;
+}
+
+.bedtime-colon {
+  display: inline-block;
+  animation: colonBlink 2s ease-in-out infinite;
+}
+
+.bedtime-clock-date {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #CBD5E1;
+  letter-spacing: -0.5px;
+  margin-bottom: 1.5rem;
+  transition: all 0.4s ease;
+}
+
+.bedtime-tomorrow-card {
+  background: rgba(22, 30, 49, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.75rem;
+  text-align: center;
+  max-width: 600px;
+  width: 100%;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  transition: all 0.4s ease;
+}
+
+.bedtime-wake-btn,
+.bedtime-dimmer-btn,
+.bedtime-badge,
+.bedtime-wake-hint,
+.bedtime-ampm-digit,
+.bedtime-sec-digit {
+  transition: all 0.4s ease !important;
+}
+
+/* Dimmer Mode 1: DIM (30% brightness) */
+.bedtime-dim-soft .bedtime-clock-container {
+  background: rgba(6, 10, 18, 0.4);
+  border-color: rgba(99, 102, 241, 0.12);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9);
+}
+.bedtime-dim-soft .bedtime-ambient-glow,
+.bedtime-dim-soft .bedtime-aurora-ring-1,
+.bedtime-dim-soft .bedtime-aurora-ring-2,
+.bedtime-dim-soft .bedtime-star-dust {
+  opacity: 0.15 !important;
+}
+.bedtime-dim-soft .bedtime-time-digits {
+  animation: none !important;
+  color: #334155 !important;
+  text-shadow: 0 0 12px rgba(56, 189, 248, 0.15) !important;
+}
+.bedtime-dim-soft .bedtime-ampm-digit {
+  color: #334155 !important;
+  text-shadow: none !important;
+  opacity: 0.6 !important;
+}
+.bedtime-dim-soft .bedtime-sec-digit {
+  color: #1E293B !important;
+  opacity: 0.5 !important;
+}
+.bedtime-dim-soft .bedtime-clock-date {
+  color: #334155 !important;
+}
+.bedtime-dim-soft .bedtime-tomorrow-card {
+  opacity: 0.35 !important;
+}
+.bedtime-dim-soft .bedtime-wake-btn {
+  background: rgba(30, 41, 59, 0.6) !important;
+  box-shadow: none !important;
+  color: #64748B !important;
+  opacity: 0.4 !important;
+}
+.bedtime-dim-soft .bedtime-dimmer-btn {
+  opacity: 0.6 !important;
+}
+.bedtime-dim-soft .bedtime-badge {
+  opacity: 0.4 !important;
+}
+.bedtime-dim-soft .bedtime-wake-hint {
+  opacity: 0.3 !important;
+}
+
+/* Dimmer Mode 2: ULTRA DIM (15% brightness - zero glare bedtime mode) */
+.bedtime-dim-ultra .bedtime-clock-container {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+.bedtime-dim-ultra .bedtime-ambient-glow,
+.bedtime-dim-ultra .bedtime-aurora-ring-1,
+.bedtime-dim-ultra .bedtime-aurora-ring-2,
+.bedtime-dim-ultra .bedtime-star-dust {
+  display: none !important;
+}
+.bedtime-dim-ultra .bedtime-time-digits {
+  animation: none !important;
+  color: #1E293B !important;
+  text-shadow: none !important;
+}
+.bedtime-dim-ultra .bedtime-ampm-digit {
+  color: #1E293B !important;
+  text-shadow: none !important;
+  opacity: 0.4 !important;
+}
+.bedtime-dim-ultra .bedtime-sec-digit {
+  color: #1E293B !important;
+  opacity: 0.3 !important;
+}
+.bedtime-dim-ultra .bedtime-clock-date {
+  color: #1E293B !important;
+}
+.bedtime-dim-ultra .bedtime-tomorrow-card {
+  display: none !important;
+}
+.bedtime-dim-ultra .bedtime-wake-btn {
+  background: transparent !important;
+  border: 1px solid #1E293B !important;
+  box-shadow: none !important;
+  color: #1E293B !important;
+  opacity: 0.25 !important;
+}
+.bedtime-dim-ultra .bedtime-dimmer-btn {
+  background: transparent !important;
+  border-color: #1E293B !important;
+  color: #334155 !important;
+  opacity: 0.35 !important;
+}
+.bedtime-dim-ultra .bedtime-badge {
+  background: transparent !important;
+  color: #1E293B !important;
+  border-color: #1E293B !important;
+  opacity: 0.2 !important;
+}
+.bedtime-dim-ultra .bedtime-wake-hint {
+  color: #1E293B !important;
+  opacity: 0.2 !important;
 }
 
 .offline-banner {

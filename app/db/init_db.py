@@ -209,7 +209,19 @@ DEFAULT_TIMETABLE_SLOTS = [
 
     # FRIDAY
     {"day_of_week": "Friday", "start_time": "12:00", "end_time": "12:50", "title": "Lecture / G:All | C:FIN214 / R: 28-402 / S:K3O2412", "category": "College", "spoken_announcement": "Attention! It is 12:00 PM. Time for FIN214 Lecture in Room 28-402.", "is_blocked": True, "source": "manual"},
-    {"day_of_week": "Friday", "start_time": "14:30", "end_time": "15:20", "title": "Lecture / G:All | C:PES390 / R: 33-608 / S:K2P24KB", "category": "College", "spoken_announcement": "Attention! It is 2:30 PM. Time for PES390 Lecture in Room 33-608.", "is_blocked": True, "source": "manual"}
+    {"day_of_week": "Friday", "start_time": "14:30", "end_time": "15:20", "title": "Lecture / G:All | C:PES390 / R: 33-608 / S:K2P24KB", "category": "College", "spoken_announcement": "Attention! It is 2:30 PM. Time for PES390 Lecture in Room 33-608.", "is_blocked": True, "source": "manual"},
+
+    # SATURDAY
+    {"day_of_week": "Saturday", "start_time": "09:30", "end_time": "11:30", "title": "Morning DSA Focus & Pattern Practice", "category": "DSA", "spoken_announcement": "Attention! It is 9:30 AM. Time for Morning DSA Pattern Practice.", "is_blocked": True, "source": "manual"},
+    {"day_of_week": "Saturday", "start_time": "12:00", "end_time": "13:30", "title": "ML / DL Core Concept Deep-Dive", "category": "ML", "spoken_announcement": "Attention! It is 12:00 PM. Time for ML and Deep Learning Core Study.", "is_blocked": True, "source": "manual"},
+    {"day_of_week": "Saturday", "start_time": "14:30", "end_time": "16:30", "title": "SentinelAI Engineering & Implementation", "category": "ML", "spoken_announcement": "Attention! It is 2:30 PM. Time for SentinelAI Project Development.", "is_blocked": True, "source": "manual"},
+    {"day_of_week": "Saturday", "start_time": "17:00", "end_time": "18:00", "title": "Spaced Revision & Weakness Review", "category": "College", "spoken_announcement": "Attention! It is 5:00 PM. Time for Spaced Revision & Concept Review.", "is_blocked": True, "source": "manual"},
+
+    # SUNDAY
+    {"day_of_week": "Sunday", "start_time": "09:30", "end_time": "11:30", "title": "Weekly DSA Assessment & Catchup", "category": "DSA", "spoken_announcement": "Attention! It is 9:30 AM. Time for Weekly DSA Assessment.", "is_blocked": True, "source": "manual"},
+    {"day_of_week": "Sunday", "start_time": "12:00", "end_time": "13:30", "title": "Deep Learning & Computer Vision Workshop", "category": "ML", "spoken_announcement": "Attention! It is 12:00 PM. Time for DL & CV Workshop.", "is_blocked": True, "source": "manual"},
+    {"day_of_week": "Sunday", "start_time": "14:30", "end_time": "16:30", "title": "SentinelAI Integration & Code Review", "category": "ML", "spoken_announcement": "Attention! It is 2:30 PM. Time for SentinelAI Code Review.", "is_blocked": True, "source": "manual"},
+    {"day_of_week": "Sunday", "start_time": "17:00", "end_time": "18:00", "title": "Weekly Reflection & Goal Alignment", "category": "College", "spoken_announcement": "Attention! It is 5:00 PM. Time for Weekly Reflection.", "is_blocked": True, "source": "manual"}
 ]
 
 COLLEGE_SUBJECTS = [
@@ -388,8 +400,17 @@ async def init_db_for_mode(mode: str = "REAL", force_recreate: bool = False):
                     q4_next_week_priority="Master Knapsack & Tree DP"
                 ))
 
-            await session.commit()
-            print(f"StudyOS Database [{mode}] Initialized and Seeded Successfully!")
+        # Ensure default timetable slots exist across all days
+        tt_res = await session.execute(select(TimetableSlot))
+        existing_slots = tt_res.scalars().all()
+        existing_keys = {(s.day_of_week, s.start_time, s.title) for s in existing_slots}
+        for slot_data in DEFAULT_TIMETABLE_SLOTS:
+            key = (slot_data["day_of_week"], slot_data["start_time"], slot_data["title"])
+            if key not in existing_keys:
+                session.add(TimetableSlot(**slot_data))
+
+        await session.commit()
+        print(f"StudyOS Database [{mode}] Initialized and Seeded Successfully!")
 
 async def init_db():
     await init_db_for_mode("REAL")

@@ -830,3 +830,13 @@ END:VCALENDAR"""
     slots = tt_res.json()["slots"]
     imp_titles = [s["title"] for s in slots]
     assert "DAA Lab Examination" in imp_titles
+
+def test_restart_sprint_endpoint():
+    """Test restarting 120-Day Sprint from controller settings backup option."""
+    start_date_str = date.today().isoformat()
+    res = client.post("/api/v1/sprint/restart", json={"start_date": start_date_str})
+    assert res.status_code == 200
+    data = res.json()
+    assert data["sprint_activated"] is True
+    assert data["actual_start_date"] == start_date_str
+    assert "actual_end_date" in data

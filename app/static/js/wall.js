@@ -54,12 +54,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function updateClock() {
   const now = new Date();
-  const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const hours = now.getHours();
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  const displayHours = String(hours % 12 || 12).padStart(2, '0');
+  const timeStr = `${displayHours}:${minutes} ${ampm}`;
+
   const clockEl = document.getElementById('wall-clock');
   if (clockEl) clockEl.textContent = timeStr;
 
-  const ssClockEl = document.getElementById('ss-clock');
-  if (ssClockEl) ssClockEl.textContent = timeStr;
+  const ssTimeEl = document.getElementById('ss-time-digital');
+  if (ssTimeEl) ssTimeEl.innerHTML = `${displayHours}<span class="bedtime-colon">:</span>${minutes}`;
+
+  const ssSecEl = document.getElementById('ss-seconds-digital');
+  if (ssSecEl) ssSecEl.textContent = seconds;
+
+  const ssAmpmEl = document.getElementById('ss-ampm-digital');
+  if (ssAmpmEl) ssAmpmEl.textContent = ampm;
+
+  const ssDateEl = document.getElementById('ss-date-digital');
+  if (ssDateEl) {
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    ssDateEl.textContent = now.toLocaleDateString('en-US', options);
+  }
 }
 
 async function fetchDisplayState() {
@@ -90,7 +108,24 @@ async function fetchDisplayState() {
 
 function renderWallState(data) {
   if (data.wall_sleep_mode && !isSleepMode) {
-    enterSleepMode();
+    enterSleepMode(false);
+  }
+
+  const ssSprintBadge = document.getElementById('ss-sprint-badge');
+  if (ssSprintBadge) {
+    ssSprintBadge.textContent = data.sprint_activated 
+      ? `DAY ${String(data.day_number).padStart(2, '0')} / ${data.total_days} • BEDTIME CLOCK`
+      : "PRE-SPRINT • BEDTIME CLOCK";
+  }
+
+  const ssModeBadge = document.getElementById('ss-mode-badge');
+  if (ssModeBadge) {
+    ssModeBadge.textContent = `${(data.env_mode || "REAL").toUpperCase()} MODE`;
+  }
+
+  const ssMustWinText = document.getElementById('ss-must-win-text');
+  if (ssMustWinText && data.must_win && data.must_win.text) {
+    ssMustWinText.textContent = data.must_win.text;
   }
   
   const dateStrEl = document.getElementById('wall-date-str');
@@ -418,29 +453,83 @@ function setScreen(num) {
   }
 }
 
-function enterSleepMode() {
+async function enterSleepMode(persistToBackend = false) {
   isSleepMode = true;
   const overlay = document.getElementById('screensaver-overlay');
   if (overlay) overlay.style.display = 'flex';
-}
 
-async function handleUserWakeInteraction(e) {
-  if (e.type === 'keydown' && e.key.toUpperCase() === 'S' && !isSleepMode) {
-    enterSleepMode();
-    return;
-  }
-  if (isSleepMode) {
-    isSleepMode = false;
-    const overlay = document.getElementById('screensaver-overlay');
-    if (overlay) overlay.style.display = 'none';
+  if (persistToBackend) {
     try {
       await fetch('/api/v1/wall/sleep', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({sleep: false})
+        body: JSON.stringify({sleep: true})
       });
-    } catch (err) { console.warn(err); }
-    fetchDisplayState();
+    } catch (err) { console.warn("Sleep mode sync error:", err); }
+  }
+}
+
+async function wakeWallDisplay(e) {
+  if (e && e.stopPropagation) e.stopPropagation();
+  isSleepMode = false;
+  const overlay = document.getElementById('screensaver-overlay');
+  if (overlay) overlay.style.display = 'none';
+  try {
+    await fetch('/api/v1/wall/sleep', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({sleep: false})
+    });
+  } catch (err) { console.warn("Sleep wake sync error:", err); }
+  fetchDisplayState();
+}
+
+let dimmerModeIndex = 0; // 0: Normal, 1: Dim (30%), 2: Ultra Dim (15%)
+function toggleNightDimmer(e) {
+  if (e && e.stopPropagation) e.stopPropagation();
+  const overlay = document.getElementById('screensaver-overlay');
+  const btn = document.getElementById('ss-dimmer-btn');
+  dimmerModeIndex = (dimmerModeIndex + 1) % 3;
+
+  if (!overlay || !btn) return;
+
+  overlay.classList.remove('dimmer-dim', 'dimmer-extra-dim', 'bedtime-dim-soft', 'bedtime-dim-ultra');
+  if (dimmerModeIndex === 1) {
+    overlay.classList.add('bedtime-dim-soft');
+    btn.textContent = "🌙 Dimmer: DIM (30%)";
+    btn.style.borderColor = "#f59e0b";
+    btn.style.color = "#fcd34d";
+  } else if (dimmerModeIndex === 2) {
+    overlay.classList.add('bedtime-dim-ultra');
+    btn.textContent = "🌙 Dimmer: ULTRA DIM (15%)";
+    btn.style.borderColor = "#ef4444";
+    btn.style.color = "#fca5a5";
+  } else {
+    btn.textContent = "🌙 Dimmer: NORMAL";
+    btn.style.borderColor = "#6366f1";
+    btn.style.color = "#a5b4fc";
+  }
+}
+
+async function handleUserWakeInteraction(e) {
+  if (e.type === 'keydown') {
+    const key = e.key.toLowerCase();
+    if ((key === 's' || key === 'z') && !isSleepMode) {
+      enterSleepMode(true);
+      return;
+    }
+    if (isSleepMode) {
+      wakeWallDisplay(e);
+      return;
+    }
+  }
+
+  if (isSleepMode) {
+    // Prevent waking up if clicking controls inside the bedtime clock card (like Dimmer button)
+    if (e.target && e.target.closest && e.target.closest('#bedtime-clock-card')) {
+      return;
+    }
+    wakeWallDisplay(e);
   }
 }
 
