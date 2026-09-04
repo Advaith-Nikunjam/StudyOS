@@ -212,6 +212,10 @@ function renderWallState(data) {
   const dayNum = data.day_number || 1;
   const currentWeek = data.current_week || 1;
   const dayBadgeText = `DAY ${String(dayNum).padStart(2, '0')} / 120`;
+  const fullBadgeText = `DAY ${String(dayNum).padStart(2, '0')} / 120 • WEEK ${currentWeek} • MONTH ${data.current_month || 1}`;
+
+  const topBadge = document.getElementById('wall-day-badge');
+  if (topBadge) topBadge.textContent = fullBadgeText;
 
   ['wall-s2-day-badge', 'wall-s3-day-badge', 'wall-s4-day-badge'].forEach(id => {
     const el = document.getElementById(id);
