@@ -686,10 +686,10 @@ body.wall-body {
 .wall-screen-container {
   flex: 1;
   min-height: 0;
-  padding: 1.25rem 2.5rem;
+  padding: 1rem 2.5rem;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 .wall-screen {
@@ -699,8 +699,8 @@ body.wall-body {
   flex-direction: column;
   opacity: 1;
   transition: opacity 0.3s ease-in-out;
-  overflow-y: auto;
-  padding-bottom: 0.5rem;
+  overflow: hidden;
+  padding-bottom: 0.25rem;
 }
 
 .wall-title-huge {

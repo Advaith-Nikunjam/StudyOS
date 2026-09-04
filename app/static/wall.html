@@ -113,50 +113,50 @@
 
     <!-- SLIDE 2 — 120-DAY JOURNEY -->
     <div id="screen-2" class="wall-screen" style="display:none;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
         <div class="wall-title-huge" style="margin:0;">120-DAY JOURNEY</div>
-        <span class="badge badge-indigo">DAY 07 / 120</span>
+        <span class="badge badge-indigo" id="wall-s2-day-badge">DAY 01 / 120</span>
       </div>
 
-      <div style="display:grid; grid-template-columns: 1fr 1.5fr; gap:1.5rem; flex:1; margin-bottom:1rem;">
+      <div style="display:grid; grid-template-columns: 1fr 1.4fr; gap:1.25rem; flex:1; margin-bottom:0.75rem; min-height:0;">
         <!-- Left: 5 Phase Cards -->
-        <div>
-          <div class="journey-phase-item active">
+        <div style="display:flex; flex-direction:column; justify-content:space-between;">
+          <div id="phase-card-1" class="journey-phase-item active">
             <span style="font-size:1.4rem;">🚀</span>
             <div>
-              <div style="font-weight:700; font-size:0.95rem; color:#A5B4FC;">01 FOUNDATION</div>
+              <div class="phase-title" style="font-weight:700; font-size:0.95rem; color:#A5B4FC;">01 FOUNDATION</div>
               <div style="font-size:0.75rem; color:var(--text-muted);">Days 01 - 30</div>
             </div>
           </div>
 
-          <div class="journey-phase-item">
+          <div id="phase-card-2" class="journey-phase-item">
             <span style="font-size:1.4rem;">&lt;/&gt;</span>
             <div>
-              <div style="font-weight:700; font-size:0.95rem; color:var(--text-primary);">BUILD & STRENGTHEN</div>
+              <div class="phase-title" style="font-weight:700; font-size:0.95rem; color:var(--text-primary);">BUILD & STRENGTHEN</div>
               <div style="font-size:0.75rem; color:var(--text-muted);">Days 31 - 60</div>
             </div>
           </div>
 
-          <div class="journey-phase-item">
+          <div id="phase-card-3" class="journey-phase-item">
             <span style="font-size:1.4rem;">🧠</span>
             <div>
-              <div style="font-weight:700; font-size:0.95rem; color:var(--text-primary);">BUILD ML/DL DEPTH</div>
+              <div class="phase-title" style="font-weight:700; font-size:0.95rem; color:var(--text-primary);">BUILD ML/DL DEPTH</div>
               <div style="font-size:0.75rem; color:var(--text-muted);">Days 61 - 90</div>
             </div>
           </div>
 
-          <div class="journey-phase-item">
+          <div id="phase-card-4" class="journey-phase-item">
             <span style="font-size:1.4rem;">🛡️</span>
             <div>
-              <div style="font-weight:700; font-size:0.95rem; color:var(--text-primary);">SENTINELAI SYSTEM</div>
+              <div class="phase-title" style="font-weight:700; font-size:0.95rem; color:var(--text-primary);">SENTINELAI SYSTEM</div>
               <div style="font-size:0.75rem; color:var(--text-muted);">Days 91 - 110</div>
             </div>
           </div>
 
-          <div class="journey-phase-item">
+          <div id="phase-card-5" class="journey-phase-item">
             <span style="font-size:1.4rem;">🏆</span>
             <div>
-              <div style="font-weight:700; font-size:0.95rem; color:var(--text-primary);">INTERVIEW MODE</div>
+              <div class="phase-title" style="font-weight:700; font-size:0.95rem; color:var(--text-primary);">INTERVIEW MODE</div>
               <div style="font-size:0.75rem; color:var(--text-muted);">Days 111 - 120</div>
             </div>
           </div>
@@ -168,17 +168,17 @@
             OVERALL JOURNEY PROGRESS
           </div>
           <div id="wall-journey-pct" style="font-family:var(--font-display); font-size:3.5rem; font-weight:800; color:var(--accent-purple); line-height:1;">
-            6%
+            1%
           </div>
-          <div style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:1.5rem;">7 / 120 Days Completed</div>
+          <div id="wall-journey-sub" style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:1.5rem;">1 / 120 Days Completed</div>
 
-          <svg width="100%" height="180" viewBox="0 0 500 180" fill="none">
-            <path d="M20 150 L150 90 L250 120 L380 40 L480 150 Z" fill="url(#mountain-grad)" opacity="0.15"/>
-            <path d="M20 150 L150 90 L250 120 L380 40" stroke="url(#line-grad)" stroke-width="3" stroke-dasharray="6 6"/>
-            <circle cx="20" cy="150" r="5" fill="#8B5CF6"/>
-            <circle cx="150" cy="90" r="5" fill="#8B5CF6"/>
-            <circle cx="250" cy="120" r="5" fill="#8B5CF6"/>
-            <circle cx="380" cy="40" r="7" fill="#10B981" stroke="#FFF" stroke-width="2"/>
+          <svg width="100%" height="160" viewBox="0 0 500 160" fill="none">
+            <path d="M20 140 L130 90 L240 115 L360 40 L480 140 Z" fill="url(#mountain-grad)" opacity="0.18"/>
+            <path d="M20 140 L130 90 L240 115 L360 40" stroke="url(#line-grad)" stroke-width="3" stroke-dasharray="6 6"/>
+            <circle cx="20" cy="140" r="5" fill="#8B5CF6"/>
+            <circle cx="130" cy="90" r="5" fill="#8B5CF6"/>
+            <circle cx="240" cy="115" r="5" fill="#8B5CF6"/>
+            <circle cx="360" cy="40" r="7" fill="#10B981" stroke="#FFF" stroke-width="2"/>
             <defs>
               <linearGradient id="mountain-grad" x1="0%" y1="0%" x2="0%" y2="100%">
                 <stop offset="0%" stop-color="#8B5CF6"/>
@@ -196,20 +196,20 @@
       <!-- Bottom Bar -->
       <div class="wall-stats-row-4col">
         <div class="wall-stat-box">
-          <div style="font-family:var(--font-display); font-size:1.5rem; font-weight:800; color:var(--text-primary);">16</div>
-          <div style="font-size:0.75rem; color:var(--text-secondary);">Weeks</div>
+          <div id="wall-s2-stat-week" style="font-family:var(--font-display); font-size:1.5rem; font-weight:800; color:var(--text-primary);">Week 1</div>
+          <div style="font-size:0.75rem; color:var(--text-secondary);">16 Weeks Total</div>
         </div>
         <div class="wall-stat-box">
-          <div style="font-family:var(--font-display); font-size:1.5rem; font-weight:800; color:var(--text-primary);">120</div>
-          <div style="font-size:0.75rem; color:var(--text-secondary);">Days</div>
+          <div id="wall-s2-stat-days" style="font-family:var(--font-display); font-size:1.5rem; font-weight:800; color:var(--text-primary);">Day 1 / 120</div>
+          <div style="font-size:0.75rem; color:var(--text-secondary);">Sprint Timeline</div>
         </div>
         <div class="wall-stat-box">
-          <div style="font-family:var(--font-display); font-size:1.5rem; font-weight:800; color:var(--accent-cyan);">270</div>
-          <div style="font-size:0.75rem; color:var(--text-secondary);">DSA Target</div>
+          <div id="wall-s2-stat-dsa" style="font-family:var(--font-display); font-size:1.5rem; font-weight:800; color:var(--accent-cyan);">0 / 270</div>
+          <div style="font-size:0.75rem; color:var(--text-secondary);">DSA Target Solved</div>
         </div>
         <div class="wall-stat-box">
-          <div style="font-family:var(--font-display); font-size:1.5rem; font-weight:800; color:var(--accent-purple);">V0.1 - V1.4</div>
-          <div style="font-size:0.75rem; color:var(--text-secondary);">SentinelAI</div>
+          <div id="wall-s2-stat-sentinel" style="font-family:var(--font-display); font-size:1.5rem; font-weight:800; color:var(--accent-purple);">V0.1</div>
+          <div style="font-size:0.75rem; color:var(--text-secondary);">SentinelAI Active</div>
         </div>
       </div>
     </div>
@@ -218,7 +218,7 @@
     <div id="screen-3" class="wall-screen" style="display:none;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
         <div class="wall-title-huge" style="margin:0;">REVISION & WEAKNESS RADAR</div>
-        <span class="badge badge-indigo">DAY 07 / 120</span>
+        <span id="wall-s3-day-badge" class="badge badge-indigo">DAY 01 / 120</span>
       </div>
 
       <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.25rem; flex:1; margin-bottom:1rem;">
@@ -226,30 +226,11 @@
         <div class="card">
           <div class="card-header" style="margin-bottom:0.75rem;">
             <div class="card-title">📅 REVISION QUEUE</div>
-            <span class="badge badge-yellow">4 Due Today</span>
+            <span id="wall-rev-due-badge" class="badge badge-yellow">0 Due Today</span>
           </div>
 
           <div id="wall-revisions-list" style="display:flex; flex-direction:column; gap:0.6rem; font-size:0.85rem;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <span><span style="display:inline-block; width:8px; height:8px; background:var(--status-green); border-radius:50%; margin-right:0.5rem;"></span> Hashing Basics</span>
-              <span style="color:var(--text-muted);">Today</span>
-            </div>
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <span><span style="display:inline-block; width:8px; height:8px; background:var(--status-green); border-radius:50%; margin-right:0.5rem;"></span> Big-O Notation</span>
-              <span style="color:var(--text-muted);">Today</span>
-            </div>
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <span><span style="display:inline-block; width:8px; height:8px; background:var(--status-yellow); border-radius:50%; margin-right:0.5rem;"></span> Python Lists</span>
-              <span style="color:var(--text-muted);">Tomorrow</span>
-            </div>
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <span><span style="display:inline-block; width:8px; height:8px; background:var(--status-orange); border-radius:50%; margin-right:0.5rem;"></span> Stacks & Queues</span>
-              <span style="color:var(--text-muted);">In 2 Days</span>
-            </div>
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <span><span style="display:inline-block; width:8px; height:8px; background:var(--accent-purple); border-radius:50%; margin-right:0.5rem;"></span> Recursion Basics</span>
-              <span style="color:var(--text-muted);">In 3 Days</span>
-            </div>
+            <div style="color:var(--text-muted); padding:0.5rem 0;">Loading revisions...</div>
           </div>
           <button class="btn btn-secondary" style="width:100%; margin-top:1rem; font-size:0.75rem;">View All Revisions &gt;</button>
         </div>
@@ -270,16 +251,12 @@
 
             <!-- Horizontal Severity Bars -->
             <div id="wall-weakness-radar-container" style="flex:1; display:flex; flex-direction:column; gap:0.35rem; font-size:0.8rem;">
-              <div style="display:flex; justify-content:space-between;"><span>Arrays</span><span style="color:var(--status-red); font-weight:700;">75%</span></div>
-              <div style="display:flex; justify-content:space-between;"><span>Recursion</span><span style="color:var(--status-orange); font-weight:700;">60%</span></div>
-              <div style="display:flex; justify-content:space-between;"><span>Hashing</span><span style="color:var(--status-yellow); font-weight:700;">45%</span></div>
-              <div style="display:flex; justify-content:space-between;"><span>Trees</span><span style="color:var(--status-green); font-weight:700;">30%</span></div>
-              <div style="display:flex; justify-content:space-between;"><span>Dynamic Prog.</span><span style="color:var(--status-green); font-weight:700;">20%</span></div>
+              <div style="color:var(--text-muted);">Loading weakness radar...</div>
             </div>
           </div>
 
           <div style="background:var(--bg-surface); border:1px solid var(--border-subtle); border-radius:var(--radius-sm); padding:0.6rem 0.85rem; margin-top:0.75rem; font-size:0.75rem; color:#A5B4FC; display:flex; align-items:center; gap:0.5rem;">
-            <span>🎯</span> Focus more on Arrays & Recursion. Solve, revise, and strengthen!
+            <span>🎯</span> <span id="wall-weakness-advice-text">Focus more on core concepts. Solve, revise, and strengthen!</span>
           </div>
         </div>
       </div>
@@ -288,17 +265,17 @@
       <div class="wall-stats-row-4col">
         <div class="wall-stat-box">
           <div style="font-size:0.75rem; color:var(--text-muted);">Total Weak Topics</div>
-          <div style="font-family:var(--font-display); font-size:1.6rem; font-weight:800;">5</div>
+          <div id="wall-stat-weak-total" style="font-family:var(--font-display); font-size:1.6rem; font-weight:800;">0</div>
         </div>
 
         <div class="wall-stat-box">
           <div style="font-size:0.75rem; color:var(--text-muted);">Average Weakness</div>
-          <div style="font-family:var(--font-display); font-size:1.6rem; font-weight:800; color:var(--status-orange);">46%</div>
+          <div id="wall-stat-weak-avg" style="font-family:var(--font-display); font-size:1.6rem; font-weight:800; color:var(--status-orange);">0%</div>
         </div>
 
         <div class="wall-stat-box" style="grid-column:span 2;">
           <div style="font-size:0.75rem; color:var(--text-muted);">Resolved Weaknesses</div>
-          <div style="font-family:var(--font-display); font-size:1.6rem; font-weight:800; color:var(--status-green);">12 <span style="font-size:0.8rem; font-weight:400; color:var(--text-secondary);">(This Sprint)</span></div>
+          <div id="wall-stat-weak-resolved" style="font-family:var(--font-display); font-size:1.6rem; font-weight:800; color:var(--status-green);">0 <span style="font-size:0.8rem; font-weight:400; color:var(--text-secondary);">(This Sprint)</span></div>
         </div>
       </div>
     </div>
@@ -307,7 +284,7 @@
     <div id="screen-4" class="wall-screen" style="display:none;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
         <div class="wall-title-huge" style="margin:0; color:var(--status-red);">URGENT ALERTS</div>
-        <span class="badge badge-red">DAY 07 / 120</span>
+        <span id="wall-s4-day-badge" class="badge badge-red">DAY 01 / 120</span>
       </div>
 
       <div class="wall-urgent-screen-box">

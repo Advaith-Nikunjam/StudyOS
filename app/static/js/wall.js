@@ -209,40 +209,145 @@ function renderWallState(data) {
   }
 
   // Slide 2 Journey Data Binding
+  const dayNum = data.day_number || 1;
+  const currentWeek = data.current_week || 1;
+  const dayBadgeText = `DAY ${String(dayNum).padStart(2, '0')} / 120`;
+
+  ['wall-s2-day-badge', 'wall-s3-day-badge', 'wall-s4-day-badge'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = dayBadgeText;
+  });
+
+  const journeyPct = Math.round((dayNum / 120) * 100);
+
   const journeyPctEl = document.getElementById('wall-journey-pct');
-  if (journeyPctEl) {
-    const pct = data.dsa ? data.dsa.percentage : 6;
-    journeyPctEl.textContent = `${pct}%`;
+  if (journeyPctEl) journeyPctEl.textContent = `${journeyPct}%`;
+
+  const journeySubEl = document.getElementById('wall-journey-sub');
+  if (journeySubEl) journeySubEl.textContent = `${dayNum} / 120 Days Completed`;
+
+  // Dynamically Highlight Active Phase Card (1 to 5)
+  let activePhase = 1;
+  if (dayNum > 110) activePhase = 5;
+  else if (dayNum > 90) activePhase = 4;
+  else if (dayNum > 60) activePhase = 3;
+  else if (dayNum > 30) activePhase = 2;
+
+  for (let i = 1; i <= 5; i++) {
+    const card = document.getElementById(`phase-card-${i}`);
+    if (card) {
+      const titleEl = card.querySelector('.phase-title');
+      if (i === activePhase) {
+        card.classList.add('active');
+        if (titleEl) titleEl.style.color = '#A5B4FC';
+      } else {
+        card.classList.remove('active');
+        if (titleEl) titleEl.style.color = 'var(--text-primary)';
+      }
+    }
   }
+
+  // Update Slide 2 Bottom Row Stats
+  const s2Week = document.getElementById('wall-s2-stat-week');
+  if (s2Week) s2Week.textContent = `Week ${currentWeek}`;
+
+  const s2Days = document.getElementById('wall-s2-stat-days');
+  if (s2Days) s2Days.textContent = `Day ${dayNum} / 120`;
+
+  const s2Dsa = document.getElementById('wall-s2-stat-dsa');
+  if (s2Dsa && data.dsa) s2Dsa.textContent = `${data.dsa.solved_independent || 0} / 270`;
+
+  const s2Sentinel = document.getElementById('wall-s2-stat-sentinel');
+  if (s2Sentinel && data.sentinelai) s2Sentinel.textContent = data.sentinelai.active_version || "V0.1";
 
   // Slide 3 Revision & Weakness Data Binding
   const revsContainer = document.getElementById('wall-revisions-list');
-  if (revsContainer && data.todays_revisions_summary) {
-    const revs = data.todays_revisions_summary.today || [];
-    if (revs.length > 0) {
-      const dots = ['var(--status-green)', 'var(--status-yellow)', 'var(--status-orange)', 'var(--accent-purple)'];
-      revsContainer.innerHTML = revs.slice(0, 5).map((r, idx) => `
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <span><span style="display:inline-block; width:8px; height:8px; background:${dots[idx % dots.length]}; border-radius:50%; margin-right:0.5rem;"></span> ${r.concept_name}</span>
-          <span style="color:var(--text-muted);">Today</span>
-        </div>
-      `).join('');
+  const revDueBadge = document.getElementById('wall-rev-due-badge');
+  if (data.todays_revisions_summary) {
+    const todayRevs = data.todays_revisions_summary.today || [];
+    const overdueRevs = data.todays_revisions_summary.overdue || [];
+    const dueCount = data.todays_revisions_summary.today_count || todayRevs.length;
+    const overdueCount = data.todays_revisions_summary.overdue_count || overdueRevs.length;
+
+    if (revDueBadge) {
+      if (overdueCount > 0) {
+        revDueBadge.textContent = `${overdueCount} Overdue`;
+        revDueBadge.className = 'badge badge-red-vivid';
+      } else {
+        revDueBadge.textContent = `${dueCount} Due Today`;
+        revDueBadge.className = 'badge badge-yellow';
+      }
+    }
+
+    if (revsContainer) {
+      const combined = [];
+      overdueRevs.forEach(r => combined.push({ ...r, label: 'Overdue', color: 'var(--status-red)' }));
+      todayRevs.forEach(r => combined.push({ ...r, label: 'Today', color: 'var(--status-green)' }));
+
+      const displayList = combined.slice(0, 5);
+      if (displayList.length > 0) {
+        revsContainer.innerHTML = displayList.map(r => `
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span><span style="display:inline-block; width:8px; height:8px; background:${r.color}; border-radius:50%; margin-right:0.5rem;"></span> ${r.concept_name}</span>
+            <span style="color:var(--text-muted); font-size:0.8rem;">${r.label}</span>
+          </div>
+        `).join('');
+      } else {
+        revsContainer.innerHTML = `<div style="color:var(--text-muted); padding:0.5rem 0;">No revisions scheduled for today.</div>`;
+      }
     }
   }
 
   const weaknessContainer = document.getElementById('wall-weakness-radar-container');
-  if (weaknessContainer && data.weakness_radar && data.weakness_radar.top_weaknesses) {
-    const topWeaknesses = data.weakness_radar.top_weaknesses.slice(0, 5);
-    const colors = ['var(--status-red)', 'var(--status-orange)', 'var(--status-yellow)', 'var(--status-green)', 'var(--status-green)'];
-    weaknessContainer.innerHTML = topWeaknesses.map((w, idx) => {
-      const pct = Math.min(w.mistake_count * 20, 100);
-      return `
-        <div style="display:flex; justify-content:space-between;">
-          <span>${w.topic}</span>
-          <span style="color:${colors[idx % colors.length]}; font-weight:700;">${pct}%</span>
-        </div>
-      `;
-    }).join('');
+  if (data.weakness_radar) {
+    const topWeaknesses = (data.weakness_radar.top_weaknesses || []).slice(0, 5);
+    if (weaknessContainer) {
+      if (topWeaknesses.length > 0) {
+        const colors = ['var(--status-red)', 'var(--status-orange)', 'var(--status-yellow)', 'var(--status-green)', 'var(--status-green)'];
+        weaknessContainer.innerHTML = topWeaknesses.map((w, idx) => {
+          const pct = Math.min(w.mistake_count * 20, 100);
+          return `
+            <div style="display:flex; justify-content:space-between;">
+              <span>${w.topic}</span>
+              <span style="color:${colors[idx % colors.length]}; font-weight:700;">${pct}%</span>
+            </div>
+          `;
+        }).join('');
+      } else {
+        weaknessContainer.innerHTML = `<div style="color:var(--text-muted);">No recorded weaknesses yet.</div>`;
+      }
+    }
+
+    // Recommendation Advice Text
+    const adviceEl = document.getElementById('wall-weakness-advice-text');
+    if (adviceEl) {
+      if (topWeaknesses.length > 0) {
+        const focusTopics = topWeaknesses.slice(0, 2).map(w => w.topic).join(' & ');
+        adviceEl.textContent = `Focus more on ${focusTopics}. Solve, revise, and strengthen!`;
+      } else {
+        adviceEl.textContent = 'Keep maintaining your daily problem solving consistency!';
+      }
+    }
+
+    // Bottom Stats Row Data Binding
+    const statTotal = document.getElementById('wall-stat-weak-total');
+    if (statTotal) statTotal.textContent = data.weakness_radar.unresolved_count ?? topWeaknesses.length;
+
+    const statAvg = document.getElementById('wall-stat-weak-avg');
+    if (statAvg) {
+      if (topWeaknesses.length > 0) {
+        const avgPct = Math.round(topWeaknesses.reduce((sum, w) => sum + Math.min(w.mistake_count * 20, 100), 0) / topWeaknesses.length);
+        statAvg.textContent = `${avgPct}%`;
+      } else {
+        statAvg.textContent = '0%';
+      }
+    }
+
+    const statResolved = document.getElementById('wall-stat-weak-resolved');
+    if (statResolved) {
+      const resolvedCount = data.weakness_radar.improved_count ?? 0;
+      statResolved.innerHTML = `${resolvedCount} <span style="font-size:0.8rem; font-weight:400; color:var(--text-secondary);">(This Sprint)</span>`;
+    }
   }
 
   // Slide 4 Urgent & Assignments Data Binding
@@ -333,10 +438,18 @@ function renderWallState(data) {
     if (currentScreen === 4) setScreen(1);
   }
 
-  // Slide 5 Timetable Data Binding
+  // Slide 5 Timetable Data Binding (With Deduplication)
   const ttContainer = document.getElementById('wall-timetable-container');
   if (ttContainer && data.today_timetable) {
-    const slots = data.today_timetable;
+    const rawSlots = data.today_timetable;
+    const seenKeys = new Set();
+    const slots = rawSlots.filter(s => {
+      const key = `${s.title}_${s.start_time}_${s.end_time}`;
+      if (seenKeys.has(key)) return false;
+      seenKeys.add(key);
+      return true;
+    });
+
     if (slots.length > 0) {
       const categoryBadges = {
         'Exam': 'badge-red-vivid',

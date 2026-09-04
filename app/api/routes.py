@@ -103,7 +103,14 @@ async def get_display_state(db: AsyncSession = Depends(get_db)):
             (TimetableSlot.day_of_week.in_([today_dow, "Daily", "All"])) | (TimetableSlot.date_str == today_str)
         ).order_by(TimetableSlot.start_time)
     )
-    today_timetable_slots = tt_res.scalars().all()
+    all_slots = tt_res.scalars().all()
+    seen_slots = set()
+    today_timetable_slots = []
+    for s in all_slots:
+        slot_key = (s.title.strip(), s.start_time, s.end_time)
+        if slot_key not in seen_slots:
+            seen_slots.add(slot_key)
+            today_timetable_slots.append(s)
 
     cfg_res = await db.execute(select(CalendarConfig))
     calendar_cfg = cfg_res.scalar_one_or_none()

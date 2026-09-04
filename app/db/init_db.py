@@ -336,9 +336,8 @@ async def init_db_for_mode(mode: str = "REAL", force_recreate: bool = False):
                         t_status = "mastered" if is_demo and "Perceptron" in top else "not_started"
                         session.add(CollegeSyllabusTopic(subject_id=subj.id, unit_name=unit_name, topic_name=top, status=t_status))
                         
-            # 6. Seed Timetable Slots across REAL, TEST, and DEMO modes
-            for slot_data in DEFAULT_TIMETABLE_SLOTS:
-                session.add(TimetableSlot(**slot_data))
+            # 6. Timetable Slots will be seeded idempotently below
+
 
             # 7. Seed Demo Logs if DEMO mode (Constraint 7)
             if is_demo:
@@ -400,10 +399,18 @@ async def init_db_for_mode(mode: str = "REAL", force_recreate: bool = False):
                     q4_next_week_priority="Master Knapsack & Tree DP"
                 ))
 
-        # Ensure default timetable slots exist across all days
+        # Clean up existing duplicate timetable slots if any
         tt_res = await session.execute(select(TimetableSlot))
         existing_slots = tt_res.scalars().all()
-        existing_keys = {(s.day_of_week, s.start_time, s.title) for s in existing_slots}
+        seen_keys = set()
+        for s in existing_slots:
+            key = (s.day_of_week, s.start_time, s.title, s.date_str)
+            if key in seen_keys:
+                await session.delete(s)
+            else:
+                seen_keys.add(key)
+        
+        existing_keys = {(s[0], s[1], s[2]) for s in seen_keys if s[3] is None}
         for slot_data in DEFAULT_TIMETABLE_SLOTS:
             key = (slot_data["day_of_week"], slot_data["start_time"], slot_data["title"])
             if key not in existing_keys:
