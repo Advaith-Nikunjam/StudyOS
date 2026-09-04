@@ -473,7 +473,7 @@ async def activate_sprint(
     created_tasks = await DailyAllocationService.ensure_today_tasks_exist(db, mode=cfg.env_mode, target_date_str=start_date_str)
     
     return {
-        "message": "🎉 120-DAY SPRINT ACTIVATED SUCCESSFULLY!",
+        "message": "120-DAY SPRINT ACTIVATED SUCCESSFULLY!",
         "sprint_activated": True,
         "actual_start_date": start_date_str,
         "actual_end_date": end_date_str,
@@ -516,7 +516,7 @@ async def restart_sprint(
     created_tasks = await DailyAllocationService.ensure_today_tasks_exist(db, mode=cfg.env_mode, target_date_str=start_date_str)
     
     return {
-        "message": "🔄 120-DAY SPRINT RESTARTED SUCCESSFULLY!",
+        "message": "120-DAY SPRINT RESTARTED SUCCESSFULLY!",
         "sprint_activated": True,
         "actual_start_date": start_date_str,
         "actual_end_date": end_date_str,

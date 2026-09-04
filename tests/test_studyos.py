@@ -108,6 +108,22 @@ async def test_one_time_sprint_activation():
     assert res_second.status_code == 400
     assert "ALREADY activated" in res_second.json()["detail"]
 
+@pytest.mark.asyncio
+async def test_sprint_restart_endpoint():
+    """Proves RESTART SPRINT resets the sprint timeline from Day 01 with a new start date."""
+    set_current_env_mode("TEST")
+    await init_db_for_mode("TEST", force_recreate=True)
+    
+    # 1. Activate sprint
+    client.post("/api/v1/sprint/start", json={"start_date": "2026-08-01"})
+    
+    # 2. Restart sprint with new date
+    res = client.post("/api/v1/sprint/restart", json={"start_date": "2026-09-05"})
+    assert res.status_code == 200
+    data = res.json()
+    assert data["sprint_activated"] == True
+    assert data["actual_start_date"] == "2026-09-05"
+
 def test_env_switch_administrative_confirmation():
     """Proves environment switching enforces explicit confirmation for REAL mode and informs for TEST/DEMO."""
     res = client.post("/api/v1/env/switch", json={"env_mode": "REAL", "confirmed": False})
