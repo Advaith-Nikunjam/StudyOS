@@ -50,7 +50,8 @@ async def get_display_state(db: AsyncSession = Depends(get_db)):
     Returns lightweight, distance-viewable payload for 4-screen rotation engine.
     Now includes Today's Must Win, Spaced Revisions, Weakness Radar, & Recovery status.
     """
-    await DailyAllocationService.ensure_today_tasks_exist(db)
+    env_mode = get_current_env_mode()
+    await DailyAllocationService.ensure_today_tasks_exist(db, mode=env_mode)
     sprint_status = await RoadmapService.get_sprint_status(db)
     today_str = date.today().isoformat()
     
@@ -206,7 +207,8 @@ async def get_display_state(db: AsyncSession = Depends(get_db)):
 @router.get("/api/v1/dashboard")
 async def get_controller_dashboard(db: AsyncSession = Depends(get_db)):
     """Full data payload for Main Controller interface."""
-    await DailyAllocationService.ensure_today_tasks_exist(db)
+    env_mode = get_current_env_mode()
+    await DailyAllocationService.ensure_today_tasks_exist(db, mode=env_mode)
     sprint_status = await RoadmapService.get_sprint_status(db)
     today_str = date.today().isoformat()
     
@@ -470,7 +472,8 @@ async def activate_sprint(
     cfg.activated_at = datetime.now(timezone.utc)
     
     await db.commit()
-    created_tasks = await DailyAllocationService.ensure_today_tasks_exist(db, mode=cfg.env_mode, target_date_str=start_date_str)
+    env_mode = get_current_env_mode()
+    created_tasks = await DailyAllocationService.ensure_today_tasks_exist(db, mode=env_mode, force_recreate=True)
     
     return {
         "message": "120-DAY SPRINT ACTIVATED SUCCESSFULLY!",
@@ -489,7 +492,7 @@ async def restart_sprint(
     """
     RESTART 120-DAY SPRINT ENDPOINT (BACKUP).
     Allows resetting and restarting the 120-day sprint cycle from Day 01.
-    Recalculates actual_start_date and actual_end_date.
+    Wipes old sprint allocated tasks, resets timeline to Day 01, and re-materializes fresh tasks for today.
     """
     cfg_res = await db.execute(select(SprintConfig))
     cfg = cfg_res.scalar_one_or_none()
@@ -512,8 +515,28 @@ async def restart_sprint(
     cfg.actual_end_date = end_date_str
     cfg.activated_at = datetime.now(timezone.utc)
     
+    today_str = date.today().isoformat()
+
+    # 1. Clear previous auto-generated sprint tasks and today's tasks so Day 01 is freshly allocated
+    await db.execute(
+        delete(Task).where(
+            (Task.due_date == today_str) |
+            (Task.notes.like("%Allocated Task%")) |
+            (Task.notes.like("%Sprint Day%")) |
+            (Task.source == "roadmap")
+        )
+    )
+    
+    # 2. Reset DayLog for today
+    await db.execute(
+        delete(DayLog).where(DayLog.date == today_str)
+    )
+
     await db.commit()
-    created_tasks = await DailyAllocationService.ensure_today_tasks_exist(db, mode=cfg.env_mode, target_date_str=start_date_str)
+    
+    # 3. Ensure tasks for TODAY exist based on the new sprint start date & day number calculation
+    env_mode = get_current_env_mode()
+    created_tasks = await DailyAllocationService.ensure_today_tasks_exist(db, mode=env_mode, force_recreate=True)
     
     return {
         "message": "120-DAY SPRINT RESTARTED SUCCESSFULLY!",

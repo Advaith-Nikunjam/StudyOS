@@ -2,8 +2,12 @@
 
 let currentTaskFilter = 'ALL';
 
+function getLocalTodayIsoDate() {
+  return new Date(Date.now() - (new Date().getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = getLocalTodayIsoDate();
   const dateInput = document.getElementById('sprint-start-date-input');
   if (dateInput) dateInput.value = todayStr;
 
@@ -748,7 +752,7 @@ async function handleStartSprintSubmit(e) {
 function openRestartSprintModal() {
   closeModal('settings-modal');
   const dateInput = document.getElementById('restart-sprint-date-input');
-  if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
+  if (dateInput) dateInput.value = getLocalTodayIsoDate();
   openModal('restart-sprint-modal');
 }
 

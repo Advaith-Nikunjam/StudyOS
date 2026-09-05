@@ -518,11 +518,12 @@ class DailyAllocationService:
     async def ensure_today_tasks_exist(
         session,
         mode: str = "REAL",
-        target_date_str: Optional[str] = None
+        target_date_str: Optional[str] = None,
+        force_recreate: bool = False
     ) -> List[Task]:
         """
         Auto-materializes daily allocation tasks into the database `Task` table for target_date_str
-        if the sprint is active and no tasks currently exist for today.
+        if the sprint is active and no tasks currently exist for today (or if force_recreate=True).
         Also seeds initial DayLog and SpacedRevision items if needed.
         """
         today_str = target_date_str or date.today().isoformat()
@@ -537,8 +538,12 @@ class DailyAllocationService:
             select(Task).where(Task.due_date == today_str)
         )
         existing_tasks = existing_res.scalars().all()
-        if len(existing_tasks) > 0:
+        if len(existing_tasks) > 0 and not force_recreate:
             return existing_tasks
+
+        if force_recreate and len(existing_tasks) > 0:
+            await session.execute(delete(Task).where(Task.due_date == today_str))
+            await session.flush()
 
         # Calculate daily allocation
         allocation = await DailyAllocationService.get_daily_allocation(session, mode=mode, custom_date_str=today_str)
@@ -561,9 +566,9 @@ class DailyAllocationService:
         # Ensure DayLog exists for today with Must Win text
         day_res = await session.execute(select(DayLog).where(DayLog.date == today_str))
         day_log = day_res.scalar_one_or_none()
+        focus = allocation.get("focus_dsa", "DSA Patterns").split(",")[0].strip()
+        must_win = f"Master {focus} & complete Day {allocation['current_day']} SentinelAI task"
         if not day_log:
-            focus = allocation.get("focus_dsa", "DSA Patterns").split(",")[0].strip()
-            must_win = f"Master {focus} & complete Day {allocation['current_day']} SentinelAI task"
             day_log = DayLog(
                 date=today_str,
                 day_number=allocation["current_day"],
@@ -572,6 +577,10 @@ class DailyAllocationService:
                 status="active"
             )
             session.add(day_log)
+        elif force_recreate:
+            day_log.day_number = allocation["current_day"]
+            day_log.must_win_text = must_win
+            day_log.status = "active"
 
         # Seed initial Spaced Revision items for foundational concepts if queue is empty
         rev_count_res = await session.execute(select(SpacedRevision))
