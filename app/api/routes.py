@@ -472,6 +472,9 @@ async def start_day_endpoint(
             day_number=sprint_status["day_number"] or 1,
             available_hours=available_hours,
             must_win_text=must_win_text,
+            constraints=body.get("constraints", ""),
+            energy_level=body.get("energy_level", "High"),
+            top_priority=body.get("top_priority", ""),
             status="active"
         )
         db.add(day_log)
@@ -479,6 +482,12 @@ async def start_day_endpoint(
         day_log.available_hours = available_hours
         if must_win_text:
             day_log.must_win_text = must_win_text
+        if "constraints" in body:
+            day_log.constraints = body["constraints"]
+        if "energy_level" in body:
+            day_log.energy_level = body["energy_level"]
+        if "top_priority" in body:
+            day_log.top_priority = body["top_priority"]
         day_log.status = "active"
         
     await db.commit()
@@ -508,6 +517,8 @@ async def end_day_endpoint(
     if day_log:
         day_log.must_win_result = must_win_result
         day_log.focused_hours = focused_hours
+        day_log.what_learned = what_learned
+        day_log.mistakes_noted = mistakes_noted
         day_log.notes = f"Learned: {what_learned}\nMistakes: {mistakes_noted}"
         day_log.status = "completed"
         await db.commit()
@@ -665,11 +676,6 @@ async def switch_environment(
         "env_mode": active_mode
     }
 
-@router.post("/api/v1/demo/reset")
-async def reset_demo_mode():
-    """Resets DEMO mode database back to the rich 7-day showcase state."""
-    await init_db_for_mode("DEMO", force_recreate=True)
-    return {"message": "DEMO mode reset back to CURATED BASELINE state with 7-day roadmap timetable showcase data."}
 
 @router.get("/api/v1/roadmap")
 async def get_full_roadmap(db: AsyncSession = Depends(get_db)):
@@ -810,78 +816,7 @@ async def process_jarvis_command(
     result = await JarvisEngine.process_user_input(db, user_input, confirmed=confirmed)
     return result
 
-@router.post("/api/v1/day/start")
-async def start_day(
-    body: Dict[str, Any] = Body(...),
-    db: AsyncSession = Depends(get_db)
-):
-    """Day Start wizard endpoint."""
-    today_str = date.today().isoformat()
-    sprint_status = await RoadmapService.get_sprint_status(db)
-    
-    day_res = await db.execute(select(DayLog).where(DayLog.date == today_str))
-    day_log = day_res.scalar_one_or_none()
-    
-    if not day_log:
-        day_log = DayLog(date=today_str, day_number=sprint_status["day_number"])
-        db.add(day_log)
-        
-    day_log.available_hours = body.get("available_hours", 4.0)
-    day_log.constraints = body.get("constraints", "")
-    day_log.energy_level = body.get("energy_level", "High")
-    day_log.top_priority = body.get("top_priority", "")
-    if "must_win_text" in body:
-        day_log.must_win_text = body["must_win_text"]
-    day_log.status = "active"
-    
-    await db.commit()
-    return {"message": "Day Start successfully logged. Schedule optimized.", "date": today_str}
 
-@router.post("/api/v1/day/end")
-async def end_day(
-    body: Dict[str, Any] = Body(...),
-    db: AsyncSession = Depends(get_db)
-):
-    """Day End review endpoint - logs progress & generates daily report."""
-    today_str = date.today().isoformat()
-    
-    day_res = await db.execute(select(DayLog).where(DayLog.date == today_str))
-    day_log = day_res.scalar_one_or_none()
-    
-    if not day_log:
-        sprint_status = await RoadmapService.get_sprint_status(db)
-        day_log = DayLog(date=today_str, day_number=sprint_status["day_number"])
-        db.add(day_log)
-        
-    day_log.what_learned = body.get("what_learned", "")
-    day_log.mistakes_noted = body.get("mistakes_noted", "")
-    day_log.focused_hours = body.get("focused_hours", 4.0)
-    if "must_win_result" in body:
-        day_log.must_win_result = body["must_win_result"]
-    day_log.status = "closed"
-    
-    await db.commit()
-    
-    report_file = await ReportingService.generate_daily_report(db, target_date_str=today_str)
-    
-    return {
-        "message": "Day End recorded. Daily Markdown report generated successfully.",
-        "report_file": report_file
-    }
-
-@router.post("/api/v1/wall/sleep")
-async def toggle_wall_sleep(
-    body: Dict[str, Any] = Body(...),
-    db: AsyncSession = Depends(get_db)
-):
-    """Explicitly toggles Wall Display Sleep/Screensaver Mode."""
-    sleep_state = body.get("sleep", True)
-    cfg_res = await db.execute(select(SprintConfig))
-    cfg = cfg_res.scalar_one_or_none()
-    if cfg:
-        cfg.wall_sleep_mode = sleep_state
-        await db.commit()
-    return {"message": f"Wall Sleep Mode set to {sleep_state}", "wall_sleep_mode": sleep_state}
 
 @router.post("/api/v1/mode/exam")
 async def toggle_exam_mode(
@@ -953,25 +888,7 @@ async def delete_task_endpoint(
     return {"message": f"Task '{task.title}' deleted successfully."}
 
 
-@router.post("/api/v1/dsa/log")
-async def log_dsa_attempt(
-    body: Dict[str, Any] = Body(...),
-    db: AsyncSession = Depends(get_db)
-):
-    """Logs solved DSA problem attempt."""
-    dsa_log = DSALog(
-        problem_name=body.get("problem_name", "DSA Problem"),
-        topic=body.get("topic", "Arrays"),
-        difficulty=body.get("difficulty", "Medium"),
-        time_taken_mins=body.get("time_taken_mins", 30),
-        independent_solve=body.get("independent_solve", True),
-        hint_used=body.get("hint_used", False),
-        solution_seen=body.get("solution_seen", False),
-        mistake_type=body.get("mistake_type")
-    )
-    db.add(dsa_log)
-    await db.commit()
-    return {"message": "DSA Problem logged successfully."}
+
 
 @router.post("/api/v1/backup/create")
 async def trigger_backup(

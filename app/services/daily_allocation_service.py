@@ -251,7 +251,12 @@ class DailyAllocationService:
             day_in_week = 1
             total_days_in_week = 7
         else:
-            start_dt = datetime.strptime(config.actual_start_date, "%Y-%m-%d").date()
+            start_date_str = (config and config.actual_start_date) or date.today().isoformat()
+            try:
+                start_dt = datetime.strptime(start_date_str, "%Y-%m-%d").date()
+            except (ValueError, TypeError):
+                start_dt = date.today()
+
             cur_dt = datetime.strptime(target_date_str, "%Y-%m-%d").date()
             days_elapsed = (cur_dt - start_dt).days + 1
             current_day = max(1, min(days_elapsed, 120))
@@ -532,6 +537,12 @@ class DailyAllocationService:
         config = cfg_res.scalar_one_or_none()
         if not config or not config.sprint_activated:
             return []
+
+        if not config.actual_start_date:
+            config.actual_start_date = today_str
+            end_dt = date.today() + timedelta(days=119)
+            config.actual_end_date = end_dt.isoformat()
+            await session.commit()
 
         # Check existing tasks for today
         existing_res = await session.execute(
