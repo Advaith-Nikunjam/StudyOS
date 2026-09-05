@@ -215,10 +215,37 @@ function renderWallState(data) {
   }
 
   const completionPctEl = document.getElementById('wall-completion-pct');
-  if (completionPctEl) {
-    const done = data.today_top_tasks ? data.today_top_tasks.filter(t => t.status === 'completed').length : 0;
-    const total = data.today_top_tasks ? data.today_top_tasks.length : 0;
-    completionPctEl.textContent = `${done} / ${total}`;
+  const completionSubEl = document.getElementById('wall-completion-sub');
+  const focusPlannedEl = document.getElementById('wall-focus-planned');
+  const focusDoneEl = document.getElementById('wall-focus-done');
+  const focusDonePctEl = document.getElementById('wall-focus-done-pct');
+  const focusRemainingEl = document.getElementById('wall-focus-remaining');
+
+  if (data.today_top_tasks) {
+    const tasks = data.today_top_tasks;
+    const total = tasks.length;
+    const completedTasks = tasks.filter(t => t.status === 'completed');
+    const done = completedTasks.length;
+    const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+
+    const plannedMins = tasks.reduce((sum, t) => sum + (t.est_mins || 45), 0);
+    const doneMins = completedTasks.reduce((sum, t) => sum + (t.est_mins || 45), 0);
+    const remainingMins = plannedMins - doneMins;
+    const timePct = plannedMins > 0 ? Math.round((doneMins / plannedMins) * 100) : 0;
+
+    const formatMins = (m) => {
+      const hrs = Math.floor(m / 60);
+      const mins = m % 60;
+      if (hrs > 0) return `${hrs}h ${mins}m`;
+      return `${mins}m`;
+    };
+
+    if (completionPctEl) completionPctEl.textContent = `${done} / ${total}`;
+    if (completionSubEl) completionSubEl.textContent = `${pct}% Tasks Done`;
+    if (focusPlannedEl) focusPlannedEl.textContent = formatMins(plannedMins);
+    if (focusDoneEl) focusDoneEl.textContent = formatMins(doneMins);
+    if (focusDonePctEl) focusDonePctEl.textContent = `(${timePct}%)`;
+    if (focusRemainingEl) focusRemainingEl.textContent = formatMins(remainingMins);
   }
 
   // Slide 2 Journey Data Binding

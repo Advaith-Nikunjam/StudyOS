@@ -135,13 +135,19 @@ function renderHeader(status) {
       dayBadge.textContent = "PRE-SPRINT (NOT STARTED)";
       dayBadge.style.color = "var(--accent-indigo)";
     }
-    if (startSprintBtn) startSprintBtn.style.display = "inline-flex";
+    if (startSprintBtn) {
+      startSprintBtn.style.display = "inline-flex";
+      startSprintBtn.textContent = "🚀 Start 120-Day Sprint";
+    }
   } else {
     if (dayBadge) {
       dayBadge.textContent = `DAY ${String(status.day_number).padStart(2, '0')} / 120`;
       dayBadge.style.color = "var(--text-primary)";
     }
-    if (startSprintBtn) startSprintBtn.style.display = "none";
+    if (startSprintBtn) {
+      startSprintBtn.style.display = "inline-flex";
+      startSprintBtn.textContent = "🔄 Restart 120-Day Sprint";
+    }
   }
 
   const sidebarPct = document.getElementById('sidebar-sprint-pct');
@@ -754,6 +760,14 @@ async function handleStartSprintSubmit(e) {
   alert(`${data.message}\nStart Date: ${data.actual_start_date}\nEnd Date (120 Days): ${data.actual_end_date}`);
   closeModal('start-sprint-modal');
   loadDashboardData();
+}
+
+function openStartOrRestartSprintModal() {
+  if (globalSprintStatus && globalSprintStatus.sprint_activated) {
+    openRestartSprintModal();
+  } else {
+    openModal('start-sprint-modal');
+  }
 }
 
 function openRestartSprintModal() {

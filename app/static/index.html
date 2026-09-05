@@ -31,6 +31,7 @@
 
       <nav class="sidebar-nav">
         <a class="nav-item active" onclick="setActiveNavItem(this); loadDashboardData();"><span class="nav-item-icon">🏠</span> Dashboard</a>
+        <a class="nav-item" onclick="openStartOrRestartSprintModal()"><span class="nav-item-icon">🚀</span> Start / Restart 120-Day Sprint</a>
         <a class="nav-item" onclick="setActiveNavItem(this); openModal('start-day-modal');"><span class="nav-item-icon">📅</span> Today's Plan</a>
         <a class="nav-item" onclick="openRoadmapHub(this)"><span class="nav-item-icon">🗺️</span> Roadmap</a>
         <a class="nav-item" onclick="openDsaTrackerHub(this)"><span class="nav-item-icon">&lt;/&gt;</span> DSA Tracker</a>
@@ -80,7 +81,7 @@
           <button id="voice-toggle-btn" class="btn btn-secondary" style="white-space:nowrap; flex-shrink:0; font-size:0.78rem; border-color:var(--accent-indigo); color:#A5B4FC;" onclick="toggleVoiceAnnouncements()">🔊 Voice: ON</button>
           <button class="btn btn-secondary" style="white-space:nowrap; flex-shrink:0; font-size:0.78rem; border-color:var(--border-bright); color:var(--text-secondary); height:34px; padding:0.35rem 0.65rem;" onclick="openSettingsHub()" title="System Settings & Backup Controls">⚙️ Settings</button>
           
-          <button id="start-sprint-btn" class="btn btn-accent" style="display:none; white-space:nowrap; flex-shrink:0; background:linear-gradient(135deg, #6366F1, #8B5CF6); color:#fff; font-weight:700; border:none; padding:0.35rem 0.65rem; height:34px; font-size:0.78rem;" onclick="openModal('start-sprint-modal')">🚀 Start Sprint</button>
+          <button id="start-sprint-btn" class="btn btn-accent" style="display:inline-flex; white-space:nowrap; flex-shrink:0; background:linear-gradient(135deg, #6366F1, #8B5CF6); color:#fff; font-weight:700; border:none; padding:0.35rem 0.65rem; height:34px; font-size:0.78rem;" onclick="openStartOrRestartSprintModal()">🚀 Start / Restart Sprint</button>
 
           <button class="btn btn-secondary" style="white-space:nowrap; flex-shrink:0; border-color:var(--accent-cyan); color:var(--accent-cyan); padding:0.35rem 0.65rem; height:34px; font-size:0.78rem;" onclick="openTimetableHub()">📅 Timetable</button>
           <button class="btn btn-accent" style="white-space:nowrap; flex-shrink:0; background:linear-gradient(135deg, #10B981, #059669); color:#fff; font-weight:700; border:none; padding:0.35rem 0.75rem; height:34px; font-size:0.78rem; box-shadow:0 4px 10px rgba(16,185,129,0.25);" onclick="openModal('add-task-modal')">➕ Add Task</button>
