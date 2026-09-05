@@ -16,6 +16,14 @@ document.addEventListener('DOMContentLoaded', () => {
   updateClock();
   setInterval(updateClock, 1000);
   
+  // 1. Immediately hydrate UI from local storage cache to eliminate refresh flash/blink
+  const cached = localStorage.getItem('studyos_wall_cache');
+  if (cached) {
+    try {
+      renderWallState(JSON.parse(cached));
+    } catch (e) {}
+  }
+
   fetchDisplayState();
   setInterval(fetchDisplayState, 10000); // Poll API every 10 seconds
   
@@ -159,6 +167,7 @@ function renderWallState(data) {
     const countText = document.getElementById('wall-plan-count-text');
     if (countText) countText.textContent = `${tasks.length} Tasks Scheduled • ~${totalMins} min`;
 
+    let newTasksHtml = '';
     if (tasks.length > 0) {
       const categoryIcons = {
         'Assignment': '📝',
@@ -180,7 +189,7 @@ function renderWallState(data) {
         'General': 'var(--accent-indigo)'
       };
 
-      tasksContainer.innerHTML = tasks.map((t, idx) => {
+      newTasksHtml = tasks.map((t, idx) => {
         const icon = categoryIcons[t.category] || '📌';
         const color = categoryColors[t.category] || 'var(--accent-indigo)';
         const isDone = t.status === 'completed';
@@ -197,7 +206,11 @@ function renderWallState(data) {
         `;
       }).join('');
     } else {
-      tasksContainer.innerHTML = `<div style="color:var(--text-muted); padding:1rem; grid-column:span 3;">No tasks scheduled for today.</div>`;
+      newTasksHtml = `<div style="color:var(--text-muted); padding:1rem; grid-column:span 3;">No tasks scheduled for today.</div>`;
+    }
+
+    if (tasksContainer.innerHTML !== newTasksHtml) {
+      tasksContainer.innerHTML = newTasksHtml;
     }
   }
 
@@ -289,15 +302,19 @@ function renderWallState(data) {
       todayRevs.forEach(r => combined.push({ ...r, label: 'Today', color: 'var(--status-green)' }));
 
       const displayList = combined.slice(0, 5);
+      let revHtml = '';
       if (displayList.length > 0) {
-        revsContainer.innerHTML = displayList.map(r => `
+        revHtml = displayList.map(r => `
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <span><span style="display:inline-block; width:8px; height:8px; background:${r.color}; border-radius:50%; margin-right:0.5rem;"></span> ${r.concept_name}</span>
             <span style="color:var(--text-muted); font-size:0.8rem;">${r.label}</span>
           </div>
         `).join('');
       } else {
-        revsContainer.innerHTML = `<div style="color:var(--text-muted); padding:0.5rem 0;">No revisions scheduled for today.</div>`;
+        revHtml = `<div style="color:var(--text-muted); padding:0.5rem 0;">No revisions scheduled for today.</div>`;
+      }
+      if (revsContainer.innerHTML !== revHtml) {
+        revsContainer.innerHTML = revHtml;
       }
     }
   }
@@ -306,9 +323,10 @@ function renderWallState(data) {
   if (data.weakness_radar) {
     const topWeaknesses = (data.weakness_radar.top_weaknesses || []).slice(0, 5);
     if (weaknessContainer) {
+      let weakHtml = '';
       if (topWeaknesses.length > 0) {
         const colors = ['var(--status-red)', 'var(--status-orange)', 'var(--status-yellow)', 'var(--status-green)', 'var(--status-green)'];
-        weaknessContainer.innerHTML = topWeaknesses.map((w, idx) => {
+        weakHtml = topWeaknesses.map((w, idx) => {
           const pct = Math.min(w.mistake_count * 20, 100);
           return `
             <div style="display:flex; justify-content:space-between;">
@@ -318,7 +336,10 @@ function renderWallState(data) {
           `;
         }).join('');
       } else {
-        weaknessContainer.innerHTML = `<div style="color:var(--text-muted);">No recorded weaknesses yet.</div>`;
+        weakHtml = `<div style="color:var(--text-muted);">No recorded weaknesses yet.</div>`;
+      }
+      if (weaknessContainer.innerHTML !== weakHtml) {
+        weaknessContainer.innerHTML = weakHtml;
       }
     }
 
@@ -426,10 +447,9 @@ function renderWallState(data) {
       `;
     });
 
-    if (urgentHtml) {
-      urgentContainer.innerHTML = urgentHtml;
-    } else {
-      urgentContainer.innerHTML = `<div style="color:var(--text-muted); font-size:1.1rem; padding:2rem;">All assignments and revisions are up to date! Great work!</div>`;
+    const finalUrgentHtml = urgentHtml || `<div style="color:var(--text-muted); font-size:1.1rem; padding:2rem;">All assignments and revisions are up to date! Great work!</div>`;
+    if (urgentContainer.innerHTML !== finalUrgentHtml) {
+      urgentContainer.innerHTML = finalUrgentHtml;
     }
   }
 
@@ -454,6 +474,7 @@ function renderWallState(data) {
       return true;
     });
 
+    let ttHtml = '';
     if (slots.length > 0) {
       const categoryBadges = {
         'Exam': 'badge-red-vivid',
@@ -464,7 +485,7 @@ function renderWallState(data) {
         'Break': 'badge-yellow'
       };
 
-      ttContainer.innerHTML = slots.map(s => {
+      ttHtml = slots.map(s => {
         const badgeClass = categoryBadges[s.category] || 'badge-indigo';
         return `
           <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-surface); border:1px solid var(--border-bright); border-radius:var(--radius-md); padding:1rem 1.5rem; box-shadow:0 4px 12px rgba(0,0,0,0.3);">
@@ -488,7 +509,11 @@ function renderWallState(data) {
         `;
       }).join('');
     } else {
-      ttContainer.innerHTML = `<div style="color:var(--text-muted); font-size:1.1rem; padding:2rem; text-align:center;">No timetable slots scheduled for today. Add slots or sync your Google Calendar from the Dashboard!</div>`;
+      ttHtml = `<div style="color:var(--text-muted); font-size:1.1rem; padding:2rem; text-align:center;">No timetable slots scheduled for today. Add slots or sync your Google Calendar from the Dashboard!</div>`;
+    }
+
+    if (ttContainer.innerHTML !== ttHtml) {
+      ttContainer.innerHTML = ttHtml;
     }
   }
 
