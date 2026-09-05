@@ -436,6 +436,88 @@ async def update_must_win_endpoint(
     return {"message": "Today's Must Win updated.", "must_win_text": day_log.must_win_text, "must_win_result": day_log.must_win_result}
 
 
+@router.post("/api/v1/day/start")
+async def start_day_endpoint(
+    body: Dict[str, Any] = Body(...),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Initializes daily schedule, sets Today's Must Win outcome, and ensures today's tasks exist.
+    """
+    must_win_text = body.get("must_win_text", "")
+    available_hours = float(body.get("available_hours", 4.0))
+    
+    today_str = date.today().isoformat()
+    sprint_status = await RoadmapService.get_sprint_status(db)
+    
+    # Ensure sprint is activated if user explicitly starts day
+    cfg_res = await db.execute(select(SprintConfig))
+    cfg = cfg_res.scalar_one_or_none()
+    if cfg and not cfg.sprint_activated:
+        cfg.sprint_activated = True
+        cfg.actual_start_date = today_str
+        end_dt = date.today() + timedelta(days=119)
+        cfg.actual_end_date = end_dt.isoformat()
+        cfg.activated_at = datetime.now(timezone.utc)
+        await db.commit()
+    
+    env_mode = get_current_env_mode()
+    tasks = await DailyAllocationService.ensure_today_tasks_exist(db, mode=env_mode, force_recreate=True)
+    
+    day_res = await db.execute(select(DayLog).where(DayLog.date == today_str))
+    day_log = day_res.scalar_one_or_none()
+    if not day_log:
+        day_log = DayLog(
+            date=today_str,
+            day_number=sprint_status["day_number"] or 1,
+            available_hours=available_hours,
+            must_win_text=must_win_text,
+            status="active"
+        )
+        db.add(day_log)
+    else:
+        day_log.available_hours = available_hours
+        if must_win_text:
+            day_log.must_win_text = must_win_text
+        day_log.status = "active"
+        
+    await db.commit()
+    return {
+        "message": f"Day Start initialized for Day {day_log.day_number}.",
+        "must_win_text": day_log.must_win_text,
+        "available_hours": day_log.available_hours,
+        "tasks_count": len(tasks)
+    }
+
+@router.post("/api/v1/day/end")
+async def end_day_endpoint(
+    body: Dict[str, Any] = Body(...),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Completes daily review and generates daily report.
+    """
+    must_win_result = body.get("must_win_result", "achieved")
+    focused_hours = float(body.get("focused_hours", 4.0))
+    what_learned = body.get("what_learned", "")
+    mistakes_noted = body.get("mistakes_noted", "")
+    
+    today_str = date.today().isoformat()
+    day_res = await db.execute(select(DayLog).where(DayLog.date == today_str))
+    day_log = day_res.scalar_one_or_none()
+    if day_log:
+        day_log.must_win_result = must_win_result
+        day_log.focused_hours = focused_hours
+        day_log.notes = f"Learned: {what_learned}\nMistakes: {mistakes_noted}"
+        day_log.status = "completed"
+        await db.commit()
+        
+    report_file = await ReportingService.generate_daily_report(db, target_date_str=today_str)
+    return {
+        "message": "Day completed & daily report generated successfully.",
+        "report_file": report_file
+    }
+
 @router.post("/api/v1/sprint/start")
 async def activate_sprint(
     body: Dict[str, Any] = Body(...),

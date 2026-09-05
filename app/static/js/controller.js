@@ -740,6 +740,13 @@ async function handleStartSprintSubmit(e) {
   
   const data = await res.json();
   if (!res.ok) {
+    if (res.status === 400 && data.detail && data.detail.includes("ALREADY activated")) {
+      if (confirm("120-Day Sprint is ALREADY active!\n\nWould you like to RESTART your sprint timeline from Day 01?")) {
+        closeModal('start-sprint-modal');
+        openRestartSprintModal();
+      }
+      return;
+    }
     alert(`Error activating sprint: ${data.detail || data.message}`);
     return;
   }

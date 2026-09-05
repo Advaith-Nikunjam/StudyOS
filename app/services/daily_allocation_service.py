@@ -1,7 +1,7 @@
 import math
 from datetime import datetime, date, timedelta
 from typing import Dict, List, Any, Optional
-from sqlalchemy import select, and_
+from sqlalchemy import select, and_, delete
 
 from app.db.models import (
     SprintConfig, RoadmapWeek, Task, DSALog, Concept, 
